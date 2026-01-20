@@ -56,7 +56,7 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// let arr_jsonb = r#"[1, "hello", {"a": 1}]"#.parse::<OwnedJsonb>().unwrap();
     /// let raw_jsonb = arr_jsonb.as_raw();
@@ -113,7 +113,7 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// let obj_jsonb = r#"{"a": 1, "b": "hello", "c": [1, 2]}"#.parse::<OwnedJsonb>().unwrap();
     /// let raw_jsonb = obj_jsonb.as_raw();
@@ -185,7 +185,7 @@ impl RawJsonb<'_> {
     ///
     /// ```rust
     /// use std::borrow::Cow;
-    /// use jsonb::{keypath::KeyPath, OwnedJsonb, RawJsonb};
+    /// use jsonb_schema::{keypath::KeyPath, OwnedJsonb, RawJsonb};
     ///
     /// let jsonb_value = r#"{"a": {"b": [1, 2, 3], "c": "hello"}, "d": [4, 5]}"#.parse::<OwnedJsonb>().unwrap();
     /// let raw_jsonb = jsonb_value.as_raw();
@@ -295,8 +295,8 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
-    /// use jsonb::jsonpath::parse_json_path;
+    /// use jsonb_schema::OwnedJsonb;
+    /// use jsonb_schema::jsonpath::parse_json_path;
     ///
     /// let jsonb_value = r#"{"a": {"b": [1, 2, 3]}, "c": 4}"#.parse::<OwnedJsonb>().unwrap();
     /// let raw_jsonb = jsonb_value.as_raw();
@@ -330,8 +330,8 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
-    /// use jsonb::jsonpath::parse_json_path;
+    /// use jsonb_schema::OwnedJsonb;
+    /// use jsonb_schema::jsonpath::parse_json_path;
     ///
     /// let jsonb_value = r#"{"a": {"b": [1, 2, 3]}, "c": 4}"#.parse::<OwnedJsonb>().unwrap();
     /// let raw_jsonb = jsonb_value.as_raw();
@@ -363,8 +363,8 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
-    /// use jsonb::jsonpath::parse_json_path;
+    /// use jsonb_schema::OwnedJsonb;
+    /// use jsonb_schema::jsonpath::parse_json_path;
     ///
     /// let jsonb_value = r#"{"a": [{"b": 1}, {"b": 2}], "c": 3}"#.parse::<OwnedJsonb>().unwrap();
     /// let raw_jsonb = jsonb_value.as_raw();
@@ -405,8 +405,8 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
-    /// use jsonb::jsonpath::parse_json_path;
+    /// use jsonb_schema::OwnedJsonb;
+    /// use jsonb_schema::jsonpath::parse_json_path;
     ///
     /// let jsonb_value = r#"{"a": [{"b": 1}, {"b": 2}], "c": 3}"#.parse::<OwnedJsonb>().unwrap();
     /// let raw_jsonb = jsonb_value.as_raw();
@@ -448,8 +448,8 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::jsonpath::parse_json_path;
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::jsonpath::parse_json_path;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// let jsonb_value = r#"{"a": {"b": [1, 2, 3]}, "c": 4}"#.parse::<OwnedJsonb>().unwrap();
     /// let raw_jsonb = jsonb_value.as_raw();
@@ -493,8 +493,8 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::jsonpath::parse_json_path;
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::jsonpath::parse_json_path;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// let jsonb_value = r#"[
     ///     {"price": 12, "title": "Book A"},
@@ -547,7 +547,7 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// let arr_jsonb = r#"[1, "hello", 3, 4]"#.parse::<OwnedJsonb>().unwrap();
     /// let raw_jsonb = arr_jsonb.as_raw();
@@ -617,7 +617,7 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// // Deleting from an object
     /// let obj_jsonb = r#"{"a": 1, "b": "hello", "c": 3}"#.parse::<OwnedJsonb>().unwrap();
@@ -706,8 +706,8 @@ impl RawJsonb<'_> {
     /// ```rust
     /// use std::borrow::Cow;
     ///
-    /// use jsonb::keypath::KeyPath;
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::keypath::KeyPath;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// // Deleting from an array
     /// let arr_jsonb = r#"[1, 2, 3]"#.parse::<OwnedJsonb>().unwrap();
@@ -900,7 +900,7 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// let obj_jsonb = r#"{"a": 1, "b": 2, "c": 3}"#.parse::<OwnedJsonb>().unwrap();
     /// let raw_jsonb = obj_jsonb.as_raw();
@@ -983,7 +983,7 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// let obj_jsonb = r#"{"a": 1, "b": 2, "c": 3}"#.parse::<OwnedJsonb>().unwrap();
     /// let raw_jsonb = obj_jsonb.as_raw();
@@ -1062,7 +1062,7 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// let json = r#"{"user": {"name": "Alice", "scores": [85, 92, 78]}}"#;
     /// let jsonb = json.parse::<OwnedJsonb>().unwrap();

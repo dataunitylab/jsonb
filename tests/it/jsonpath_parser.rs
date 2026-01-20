@@ -15,7 +15,7 @@
 use std::io::Write;
 
 use goldenfile::Mint;
-use jsonb::jsonpath::parse_json_path;
+use jsonb_schema::jsonpath::parse_json_path;
 
 #[test]
 fn test_json_path() {

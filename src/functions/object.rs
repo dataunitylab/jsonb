@@ -45,7 +45,7 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// // Object keys
     /// let obj_jsonb = r#"{"a": 1, "b": 2, "c": 3}"#.parse::<OwnedJsonb>().unwrap();
@@ -108,7 +108,7 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// // Object iteration
     /// let obj_jsonb = r#"{"a": 1, "b": "hello", "c": [1, 2]}"#.parse::<OwnedJsonb>().unwrap();
@@ -180,7 +180,7 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// // Inserting a new key-value pair
     /// let obj_jsonb = r#"{"a": 1}"#.parse::<OwnedJsonb>().unwrap();
@@ -268,7 +268,7 @@ impl RawJsonb<'_> {
     /// ```rust
     /// use std::collections::BTreeSet;
     ///
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// let obj_jsonb = r#"{"a": 1, "b": "hello", "c": 3}"#.parse::<OwnedJsonb>().unwrap();
     /// let raw_jsonb = obj_jsonb.as_raw();
@@ -334,7 +334,7 @@ impl RawJsonb<'_> {
     /// ```rust
     /// use std::collections::BTreeSet;
     ///
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// let obj_jsonb = r#"{"a": 1, "b": "hello", "c": 3}"#.parse::<OwnedJsonb>().unwrap();
     /// let raw_jsonb = obj_jsonb.as_raw();

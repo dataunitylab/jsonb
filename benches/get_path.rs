@@ -20,11 +20,11 @@ use criterion::{criterion_group, criterion_main, Criterion};
 fn jsonb_get(data: &[u8], paths: &[&str], expected: &str) {
     let paths = paths
         .iter()
-        .map(|p| jsonb::jsonpath::Path::DotField(std::borrow::Cow::Borrowed(p)))
+        .map(|p| jsonb_schema::jsonpath::Path::DotField(std::borrow::Cow::Borrowed(p)))
         .collect::<Vec<_>>();
-    let json_path = jsonb::jsonpath::JsonPath { paths };
+    let json_path = jsonb_schema::jsonpath::JsonPath { paths };
 
-    let raw_jsonb = jsonb::RawJsonb::new(data);
+    let raw_jsonb = jsonb_schema::RawJsonb::new(data);
     let result_jsonb = raw_jsonb.select_value_by_path(&json_path).unwrap();
     assert!(result_jsonb.is_some());
     let result_jsonb = result_jsonb.unwrap();
@@ -83,7 +83,7 @@ fn add_benchmark(c: &mut Criterion) {
     for test_suite in test_suites {
         let bytes = read(&format!("./data/{}.json", test_suite.file));
 
-        let val = jsonb::parse_value(&bytes).unwrap();
+        let val = jsonb_schema::parse_value(&bytes).unwrap();
         let jsonb_bytes = val.to_vec();
 
         c.bench_function(

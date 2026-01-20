@@ -14,7 +14,7 @@
 
 use std::borrow::Cow;
 
-use jsonb::{parse_value, parse_value_standard_mode, Number, Object, Value};
+use jsonb_schema::{parse_value, parse_value_standard_mode, Number, Object, Value};
 
 fn test_parse_err(errors: &[(&str, &'static str)]) {
     for &(s, err) in errors {

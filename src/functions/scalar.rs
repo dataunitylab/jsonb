@@ -45,7 +45,7 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// let null_jsonb = "null".parse::<OwnedJsonb>().unwrap();
     /// let raw_jsonb = null_jsonb.as_raw();
@@ -78,7 +78,7 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// // JSON null
     /// let null_jsonb = "null".parse::<OwnedJsonb>().unwrap();
@@ -138,7 +138,7 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// // Boolean values
     /// let true_jsonb = "true".parse::<OwnedJsonb>().unwrap();
@@ -196,7 +196,7 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// // Boolean values
     /// let true_jsonb = "true".parse::<OwnedJsonb>().unwrap();
@@ -257,7 +257,7 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// // Boolean values
     /// let true_jsonb = "true".parse::<OwnedJsonb>().unwrap();
@@ -338,7 +338,7 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// // Number values
     /// let num_jsonb = "123.45".parse::<OwnedJsonb>().unwrap();
@@ -403,9 +403,9 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::Number;
-    /// use jsonb::OwnedJsonb;
-    /// use jsonb::RawJsonb;
+    /// use jsonb_schema::Number;
+    /// use jsonb_schema::OwnedJsonb;
+    /// use jsonb_schema::RawJsonb;
     ///
     /// // Number value
     /// let num_jsonb = "123.45".parse::<OwnedJsonb>().unwrap();
@@ -477,7 +477,7 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// // i64 values
     /// let i64_jsonb = "123456789012345678".parse::<OwnedJsonb>().unwrap();
@@ -526,7 +526,7 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// // i64 value
     /// let i64_jsonb = "123456789012345678".parse::<OwnedJsonb>().unwrap();
@@ -588,7 +588,7 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// // Integer values
     /// let i64_jsonb = "123".parse::<OwnedJsonb>().unwrap();
@@ -678,7 +678,7 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// // u64 values
     /// let u64_jsonb = "1234567890123456789".parse::<OwnedJsonb>().unwrap();
@@ -747,7 +747,7 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// // u64 value
     /// let u64_jsonb = "1234567890123456789".parse::<OwnedJsonb>().unwrap();
@@ -821,7 +821,7 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// // u64 values
     /// let u64_jsonb = "1234567890123456789".parse::<OwnedJsonb>().unwrap();
@@ -916,7 +916,7 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// // f64 values
     /// let f64_jsonb = "123.45".parse::<OwnedJsonb>().unwrap();
@@ -980,7 +980,7 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// // f64 values
     /// let f64_jsonb = "123.45".parse::<OwnedJsonb>().unwrap();
@@ -1051,7 +1051,7 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// // f64 values
     /// let f64_jsonb = "123.45".parse::<OwnedJsonb>().unwrap();
@@ -1136,7 +1136,7 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// // String value
     /// let str_jsonb = r#""hello""#.parse::<OwnedJsonb>().unwrap();
@@ -1194,7 +1194,7 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::OwnedJsonb;
     /// use std::borrow::Cow;
     ///
     /// // String value
@@ -1263,7 +1263,7 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// // String value
     /// let str_jsonb = r#""hello""#.parse::<OwnedJsonb>().unwrap();
@@ -1335,7 +1335,7 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// // Array value
     /// let arr_jsonb = "[1, 2, 3]".parse::<OwnedJsonb>().unwrap();
@@ -1391,7 +1391,7 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// // Object value
     /// let obj_jsonb = r#"{"a": 1}"#.parse::<OwnedJsonb>().unwrap();
@@ -1447,8 +1447,8 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::RawJsonb;
-    /// use jsonb::Value;
+    /// use jsonb_schema::RawJsonb;
+    /// use jsonb_schema::Value;
     ///
     /// // Binary value
     /// let binary_value = Value::Binary(&[1,2,3]);
@@ -1478,9 +1478,9 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::ExtensionValue;
-    /// use jsonb::RawJsonb;
-    /// use jsonb::Value;
+    /// use jsonb_schema::ExtensionValue;
+    /// use jsonb_schema::RawJsonb;
+    /// use jsonb_schema::Value;
     ///
     /// // Binary value
     /// let binary_value = Value::Binary(&[1,2,3]);
@@ -1516,8 +1516,8 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::RawJsonb;
-    /// use jsonb::Value;
+    /// use jsonb_schema::RawJsonb;
+    /// use jsonb_schema::Value;
     ///
     /// // Binary value
     /// let binary_value = Value::Binary(&[1,2,3]);
@@ -1562,8 +1562,8 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::RawJsonb;
-    /// use jsonb::Value;
+    /// use jsonb_schema::RawJsonb;
+    /// use jsonb_schema::Value;
     ///
     /// // Binary value
     /// let binary_value = Value::Binary(&[1,2,3]);
@@ -1602,9 +1602,9 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::Date;
-    /// use jsonb::RawJsonb;
-    /// use jsonb::Value;
+    /// use jsonb_schema::Date;
+    /// use jsonb_schema::RawJsonb;
+    /// use jsonb_schema::Value;
     ///
     /// // Date value
     /// let date_value = Value::Date(Date { value: 20372 });
@@ -1649,9 +1649,9 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::Date;
-    /// use jsonb::RawJsonb;
-    /// use jsonb::Value;
+    /// use jsonb_schema::Date;
+    /// use jsonb_schema::RawJsonb;
+    /// use jsonb_schema::Value;
     ///
     /// // Date value
     /// let date_value = Value::Date(Date { value: 20372 });
@@ -1690,9 +1690,9 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::Timestamp;
-    /// use jsonb::RawJsonb;
-    /// use jsonb::Value;
+    /// use jsonb_schema::Timestamp;
+    /// use jsonb_schema::RawJsonb;
+    /// use jsonb_schema::Value;
     ///
     /// // Timestamp value
     /// let timestamp_value = Value::Timestamp(Timestamp { value: 1760140800000000 });
@@ -1737,9 +1737,9 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::Timestamp;
-    /// use jsonb::RawJsonb;
-    /// use jsonb::Value;
+    /// use jsonb_schema::Timestamp;
+    /// use jsonb_schema::RawJsonb;
+    /// use jsonb_schema::Value;
     ///
     /// // Timestamp value
     /// let timestamp_value = Value::Timestamp(Timestamp { value: 1760140800000000 });
@@ -1778,9 +1778,9 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::TimestampTz;
-    /// use jsonb::RawJsonb;
-    /// use jsonb::Value;
+    /// use jsonb_schema::TimestampTz;
+    /// use jsonb_schema::RawJsonb;
+    /// use jsonb_schema::Value;
     ///
     /// // TimestampTz value
     /// let timestamp_tz_value = Value::TimestampTz(TimestampTz { offset: 8 * 3600, value: 1760140800000000 });
@@ -1825,9 +1825,9 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::TimestampTz;
-    /// use jsonb::RawJsonb;
-    /// use jsonb::Value;
+    /// use jsonb_schema::TimestampTz;
+    /// use jsonb_schema::RawJsonb;
+    /// use jsonb_schema::Value;
     ///
     /// // TimestampTz value
     /// let timestamp_tz_value = Value::TimestampTz(TimestampTz { offset: 8 * 3600, value: 1760140800000000 });
@@ -1866,9 +1866,9 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::Interval;
-    /// use jsonb::RawJsonb;
-    /// use jsonb::Value;
+    /// use jsonb_schema::Interval;
+    /// use jsonb_schema::RawJsonb;
+    /// use jsonb_schema::Value;
     ///
     /// // Interval value
     /// let interval_value = Value::Interval(Interval { months: 10, days: 20, micros: 300000000 });
@@ -1913,9 +1913,9 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::Interval;
-    /// use jsonb::RawJsonb;
-    /// use jsonb::Value;
+    /// use jsonb_schema::Interval;
+    /// use jsonb_schema::RawJsonb;
+    /// use jsonb_schema::Value;
     ///
     /// // Interval value
     /// let interval_value = Value::Interval(Interval { months: 10, days: 20, micros: 300000000 });

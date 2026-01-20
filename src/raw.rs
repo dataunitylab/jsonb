@@ -92,7 +92,7 @@ impl<'a> RawJsonb<'a> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// let arr_jsonb = "[1, 2, 3]".parse::<OwnedJsonb>().unwrap();
     /// let raw_jsonb = arr_jsonb.as_raw();
@@ -150,7 +150,7 @@ impl<'a> RawJsonb<'a> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// let arr_jsonb = "[1, 2, 3]".parse::<OwnedJsonb>().unwrap();
     /// let raw_jsonb = arr_jsonb.as_raw();
@@ -341,9 +341,9 @@ impl Ord for RawJsonb<'_> {
 /// # Examples
 ///
 /// ```
-/// use jsonb::from_raw_jsonb;
-/// use jsonb::OwnedJsonb;
-/// use jsonb::RawJsonb;
+/// use jsonb_schema::from_raw_jsonb;
+/// use jsonb_schema::OwnedJsonb;
+/// use jsonb_schema::RawJsonb;
 /// use serde::Deserialize;
 ///
 /// #[derive(Deserialize, Debug, PartialEq, Eq)]

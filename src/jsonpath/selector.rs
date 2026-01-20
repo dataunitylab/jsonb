@@ -124,9 +124,9 @@ impl<'a> Selector<'a> {
     /// # Examples
     ///
     /// ```
-    /// use jsonb::jsonpath::parse_json_path;
-    /// use jsonb::jsonpath::Selector;
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::jsonpath::parse_json_path;
+    /// use jsonb_schema::jsonpath::Selector;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// let jsonb_value = r#"{"a": {"b": [1, 2, 3]}, "c": 4}"#.parse::<OwnedJsonb>().unwrap();
     /// let raw_jsonb = jsonb_value.as_raw();
@@ -170,9 +170,9 @@ impl<'a> Selector<'a> {
     /// # Examples
     ///
     /// ```
-    /// use jsonb::jsonpath::parse_json_path;
-    /// use jsonb::jsonpath::Selector;
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::jsonpath::parse_json_path;
+    /// use jsonb_schema::jsonpath::Selector;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// let jsonb_value = r#"{"a": {"b": [1, 2, 3]}, "c": 4}"#.parse::<OwnedJsonb>().unwrap();
     /// let raw_jsonb = jsonb_value.as_raw();
@@ -213,9 +213,9 @@ impl<'a> Selector<'a> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::jsonpath::parse_json_path;
-    /// use jsonb::jsonpath::Selector;
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::jsonpath::parse_json_path;
+    /// use jsonb_schema::jsonpath::Selector;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// let jsonb_value = r#"{"a": [{"b": 1}, {"b": 2}], "c": 3}"#.parse::<OwnedJsonb>().unwrap();
     /// let raw_jsonb = jsonb_value.as_raw();
@@ -263,9 +263,9 @@ impl<'a> Selector<'a> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::jsonpath::parse_json_path;
-    /// use jsonb::jsonpath::Selector;
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::jsonpath::parse_json_path;
+    /// use jsonb_schema::jsonpath::Selector;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// let jsonb_value = r#"{"a": [{"b": 1}, {"b": 2}], "c": 3}"#.parse::<OwnedJsonb>().unwrap();
     /// let raw_jsonb = jsonb_value.as_raw();
@@ -321,9 +321,9 @@ impl<'a> Selector<'a> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::jsonpath::parse_json_path;
-    /// use jsonb::jsonpath::Selector;
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::jsonpath::parse_json_path;
+    /// use jsonb_schema::jsonpath::Selector;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// let jsonb_value = r#"{"a": {"b": [1, 2, 3]}, "c": 4}"#.parse::<OwnedJsonb>().unwrap();
     /// let raw_jsonb = jsonb_value.as_raw();
@@ -371,9 +371,9 @@ impl<'a> Selector<'a> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::jsonpath::parse_json_path;
-    /// use jsonb::jsonpath::Selector;
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::jsonpath::parse_json_path;
+    /// use jsonb_schema::jsonpath::Selector;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// let jsonb_value = r#"[
     ///     {"price": 12, "title": "Book A"},

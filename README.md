@@ -1,20 +1,20 @@
-# jsonb &emsp; [![Build Status]][actions] [![Latest Version]][crates.io] [![Crate Downloads]][crates.io]
+# jsonb_schema &emsp; [![Build Status]][actions] [![Latest Version]][crates.io] [![Crate Downloads]][crates.io]
 
 [build status]: https://img.shields.io/github/actions/workflow/status/datafuselabs/jsonb/rust.yml?branch=main
 [actions]: https://github.com/datafuselabs/jsonb/actions?query=branch%3Amain
-[latest version]: https://img.shields.io/crates/v/jsonb.svg
-[crates.io]: https://crates.io/crates/jsonb
-[crate downloads]: https://img.shields.io/crates/d/jsonb.svg
+[latest version]: https://img.shields.io/crates/v/jsonb_schema.svg
+[crates.io]: https://crates.io/crates/jsonb_schema
+[crate downloads]: https://img.shields.io/crates/d/jsonb_schema.svg
 
 
-`jsonb` is a binary format `JSON` representation inspired by [PostgreSQL](https://www.postgresql.org/docs/current/datatype-json.html) and [CockroachDB](https://www.cockroachlabs.com/docs/stable/jsonb). It provides a fast, lightweight and easy-to-use API for working with `JSON` data.
+`jsonb_schema` is a binary format `JSON` representation inspired by [PostgreSQL](https://www.postgresql.org/docs/current/datatype-json.html) and [CockroachDB](https://www.cockroachlabs.com/docs/stable/jsonb). It provides a fast, lightweight and easy-to-use API for working with `JSON` data.
 
 ## Features
 
 - Good compatibility: `jsonb` fully supports the `JSON` standard and can be used to store complex data structures.
 - Fast performance: `jsonb` is designed for high performance, allowing you to work with large `JSON` data sets with ease.
 - Easy to use: `jsonb` provides a number of built-in functions to support various operations, and also supports the `JSONPath` syntax for selecting and extracting subset elements.
-- Safe and secure: `jsonb` is written in Rust, which provides memory and thread safety guarantees, making it a safe choice for handling sensitive data.
+- Safe and secure: `jsonb_schema` is written in Rust, which provides memory and thread safety guarantees, making it a safe choice for handling sensitive data.
 
 ## Encoding format
 
@@ -179,18 +179,18 @@ fn main() {
     let path = r#"$.phones[*]?(@.number == 3720453)"#;
 
     // parse JSON string to jsonb value
-    let value = jsonb::parse_value(json.as_bytes()).unwrap();
+    let value = jsonb_schema::parse_value(json.as_bytes()).unwrap();
     // encode jsonb value to jsonb binary value
     let jsonb = value.to_vec();
     // parse JSONPath string
-    let json_path = jsonb::jsonpath::parse_json_path(path.as_bytes()).unwrap();
+    let json_path = jsonb_schema::jsonpath::parse_json_path(path.as_bytes()).unwrap();
     // select subset value from jsonb binary value
     let mut sub_jsonb = Vec::new();
     let mut sub_offsets = Vec::new();
-    jsonb::get_by_path(&jsonb, json_path, &mut sub_jsonb, &mut sub_offsets);
+    jsonb_schema::get_by_path(&jsonb, json_path, &mut sub_jsonb, &mut sub_offsets);
 
     // value={"number":3720453,"type":"home"}
-    println!("value={}", jsonb::to_string(&sub_jsonb));
+    println!("value={}", jsonb_schema::to_string(&sub_jsonb));
 }
 ```
 

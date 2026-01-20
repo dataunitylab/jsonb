@@ -18,7 +18,7 @@ use std::io::Read;
 use criterion::{criterion_group, criterion_main, BatchSize, Criterion};
 
 fn parse_jsonb(data: &[u8]) {
-    let _v: jsonb::OwnedJsonb = jsonb::parse_owned_jsonb(data).unwrap();
+    let _v: jsonb_schema::OwnedJsonb = jsonb_schema::parse_owned_jsonb(data).unwrap();
 }
 
 fn parse_serde_json(data: &[u8]) {

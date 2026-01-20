@@ -15,7 +15,7 @@
 use std::io::Write;
 
 use goldenfile::Mint;
-use jsonb::keypath::parse_key_paths;
+use jsonb_schema::keypath::parse_key_paths;
 
 #[test]
 fn test_json_path() {

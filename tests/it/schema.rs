@@ -1,7 +1,7 @@
 use std::collections::{BTreeMap, BTreeSet};
-use jsonb::schema::{Schema, InstanceType, SingleOrVec, encode, decode};
-use jsonb::Value;
-use jsonb::Number;
+use jsonb_schema::schema::{Schema, InstanceType, SingleOrVec, encode, decode};
+use jsonb_schema::Value;
+use jsonb_schema::Number;
 use std::borrow::Cow;
 
 #[test]

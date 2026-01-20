@@ -15,7 +15,7 @@
 use std::borrow::Cow;
 
 use ethnum::I256;
-use jsonb::{
+use jsonb_schema::{
     from_slice, Date, Decimal128, Decimal256, Decimal64, Interval, Number, Object, Timestamp,
     TimestampTz, Value,
 };
@@ -279,8 +279,8 @@ fn test_decode_extension() {
 #[test]
 fn test_decode_corrupted() {
     let json = "{\"a\": 1, \"b\": \"123\"}";
-    let jsonb = jsonb::parse_value(json.as_bytes()).unwrap().to_vec();
-    let corrupted = jsonb[0..jsonb.len() - 1].to_vec();
+    let jsonb_schema = jsonb_schema::parse_value(json.as_bytes()).unwrap().to_vec();
+    let corrupted = jsonb_schema[0..jsonb_schema.len() - 1].to_vec();
     let value = from_slice(corrupted.as_slice());
     assert!(value.is_err());
 }

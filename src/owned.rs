@@ -105,8 +105,8 @@ impl OwnedJsonb {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
-    /// use jsonb::RawJsonb;
+    /// use jsonb_schema::OwnedJsonb;
+    /// use jsonb_schema::RawJsonb;
     ///
     /// // Create some RawJsonb values
     /// let owned_num = "1".parse::<OwnedJsonb>().unwrap();
@@ -160,8 +160,8 @@ impl OwnedJsonb {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
-    /// use jsonb::RawJsonb;
+    /// use jsonb_schema::OwnedJsonb;
+    /// use jsonb_schema::RawJsonb;
     ///
     /// // Create some RawJsonb values
     /// let owned_num = "1".parse::<OwnedJsonb>().unwrap();
@@ -318,8 +318,8 @@ impl Ord for OwnedJsonb {
 /// # Examples
 ///
 /// ```
-/// use jsonb::to_owned_jsonb;
-/// use jsonb::OwnedJsonb;
+/// use jsonb_schema::to_owned_jsonb;
+/// use jsonb_schema::OwnedJsonb;
 /// use serde::Serialize;
 ///
 /// #[derive(Serialize, Debug)]

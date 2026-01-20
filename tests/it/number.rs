@@ -34,15 +34,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use jsonb::RawJsonb;
-use jsonb::{parse_value, parse_value_standard_mode};
+use jsonb_schema::RawJsonb;
+use jsonb_schema::{parse_value, parse_value_standard_mode};
 use ordered_float::OrderedFloat;
 
 #[test]
 #[cfg(feature = "arbitrary_precision")]
 fn it_cmps_decimals() {
     use core::cmp::Ordering::*;
-    use jsonb::{Number, Value};
+    use jsonb_schema::{Number, Value};
 
     fn cmp(a: &str, b: &str, c: core::cmp::Ordering) {
         let v1 = parse_value(a.as_bytes()).unwrap();

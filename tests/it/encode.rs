@@ -15,7 +15,7 @@
 use std::borrow::Cow;
 
 use ethnum::I256;
-use jsonb::{
+use jsonb_schema::{
     Date, Decimal128, Decimal256, Decimal64, Interval, Number, Object, Timestamp, TimestampTz,
     Value,
 };

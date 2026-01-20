@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! `jsonb` is a binary format `JSON` representation inspired by [PostgreSQL](https://www.postgresql.org/docs/current/datatype-json.html) and [CockroachDB](https://www.cockroachlabs.com/docs/stable/jsonb). It provides a fast, lightweight and easy-to-use API for working with `JSON` data.
+//! `jsonb_schema` is a binary format `JSON` representation inspired by [PostgreSQL](https://www.postgresql.org/docs/current/datatype-json.html) and [CockroachDB](https://www.cockroachlabs.com/docs/stable/jsonb). It provides a fast, lightweight and easy-to-use API for working with `JSON` data.
 //!
 //! ## Features
 //!
 //! - Good compatibility: `jsonb` fully supports the `JSON` standard and can be used to store complex data structures.
 //! - Fast performance: `jsonb` is designed for high performance, allowing you to work with large `JSON` data sets with ease.
 //! - Easy to use: `jsonb` provides a number of built-in functions to support various operations, and also supports the `JSONPath` syntax for selecting and extracting subset elements.
-//! - Safe and secure: `jsonb` is written in Rust, which provides memory and thread safety guarantees, making it a safe choice for handling sensitive data.
+//! - Safe and secure: `jsonb_schema` is written in Rust, which provides memory and thread safety guarantees, making it a safe choice for handling sensitive data.
 //!
 //! ## Encoding format
 //!

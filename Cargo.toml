@@ -20,7 +20,7 @@ edition = "2021"
 homepage = "https://github.com/databendlabs/jsonb"
 keywords = ["json", "jsonb", "jsonpath"]
 license = "Apache-2.0"
-name = "jsonb"
+name = "jsonb_schema"
 repository = "https://github.com/databendlabs/jsonb"
 version = "0.5.5"
 rust-version = "1.85"
@@ -35,7 +35,7 @@ nom = "8.0.0"
 num-traits = "0.2.19"
 ordered-float = { version = "5.1.0", default-features = false }
 rand = { version = "0.9.2", features = ["small_rng"] }
-serde = "1.0"
+serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0", default-features = false, features = ["std"] }
 zmij = "1.0"
 

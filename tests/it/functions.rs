@@ -18,27 +18,27 @@ use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 
 use ethnum::I256;
-use jsonb::core::JsonbItemType;
-use jsonb::from_raw_jsonb;
-use jsonb::from_slice;
-use jsonb::jsonpath::parse_json_path;
-use jsonb::keypath::parse_key_paths;
-use jsonb::keypath::KeyPath;
-use jsonb::keypath::KeyPaths;
-use jsonb::parse_value;
-use jsonb::Date;
-use jsonb::Decimal128;
-use jsonb::Decimal256;
-use jsonb::Decimal64;
-use jsonb::Error;
-use jsonb::Interval;
-use jsonb::Number;
-use jsonb::Object;
-use jsonb::OwnedJsonb;
-use jsonb::RawJsonb;
-use jsonb::Timestamp;
-use jsonb::TimestampTz;
-use jsonb::Value;
+use jsonb_schema::core::JsonbItemType;
+use jsonb_schema::from_raw_jsonb;
+use jsonb_schema::from_slice;
+use jsonb_schema::jsonpath::parse_json_path;
+use jsonb_schema::keypath::parse_key_paths;
+use jsonb_schema::keypath::KeyPath;
+use jsonb_schema::keypath::KeyPaths;
+use jsonb_schema::parse_value;
+use jsonb_schema::Date;
+use jsonb_schema::Decimal128;
+use jsonb_schema::Decimal256;
+use jsonb_schema::Decimal64;
+use jsonb_schema::Error;
+use jsonb_schema::Interval;
+use jsonb_schema::Number;
+use jsonb_schema::Object;
+use jsonb_schema::OwnedJsonb;
+use jsonb_schema::RawJsonb;
+use jsonb_schema::Timestamp;
+use jsonb_schema::TimestampTz;
+use jsonb_schema::Value;
 use nom::AsBytes;
 
 #[test]
@@ -1950,8 +1950,8 @@ fn test_to_serde_json() {
 fn test_extract_scalar_key_values() {
     // Test case 1: Simple object with scalar values
     let json = r#"{"name": "John", "age": 30, "active": true}"#;
-    let jsonb = json.parse::<OwnedJsonb>().unwrap();
-    let raw_jsonb = jsonb.as_raw();
+    let jsonb_schema = json.parse::<OwnedJsonb>().unwrap();
+    let raw_jsonb = jsonb_schema.as_raw();
 
     let result = raw_jsonb.extract_scalar_key_values().unwrap();
     assert_eq!(result.len(), 3);
@@ -1985,8 +1985,8 @@ fn test_extract_scalar_key_values() {
 
     // Test case 2: Nested object with array
     let json = r#"{"user": {"name": "Alice", "scores": [85, 92, 78]}}"#;
-    let jsonb = json.parse::<OwnedJsonb>().unwrap();
-    let raw_jsonb = jsonb.as_raw();
+    let jsonb_schema = json.parse::<OwnedJsonb>().unwrap();
+    let raw_jsonb = jsonb_schema.as_raw();
 
     let result = raw_jsonb.extract_scalar_key_values().unwrap();
     assert_eq!(result.len(), 4);
@@ -2041,8 +2041,8 @@ fn test_extract_scalar_key_values() {
 
     // Test case 3: Complex nested structure
     let json = r#"{"k1": [{"k2": "v2"}, {"k3": "v3"}]}"#;
-    let jsonb = json.parse::<OwnedJsonb>().unwrap();
-    let raw_jsonb = jsonb.as_raw();
+    let jsonb_schema = json.parse::<OwnedJsonb>().unwrap();
+    let raw_jsonb = jsonb_schema.as_raw();
 
     let result = raw_jsonb.extract_scalar_key_values().unwrap();
     assert_eq!(result.len(), 2);
@@ -2081,63 +2081,63 @@ fn test_extract_scalar_key_values() {
 fn test_jsonb_item_type() {
     // Test null value
     let json = "null";
-    let jsonb = json.parse::<OwnedJsonb>().unwrap();
-    let raw_jsonb = jsonb.as_raw();
+    let jsonb_schema = json.parse::<OwnedJsonb>().unwrap();
+    let raw_jsonb = jsonb_schema.as_raw();
     let item_type = raw_jsonb.jsonb_item_type().unwrap();
     assert!(matches!(item_type, JsonbItemType::Null));
 
     // Test boolean values
     let json = "true";
-    let jsonb = json.parse::<OwnedJsonb>().unwrap();
-    let raw_jsonb = jsonb.as_raw();
+    let jsonb_schema = json.parse::<OwnedJsonb>().unwrap();
+    let raw_jsonb = jsonb_schema.as_raw();
     let item_type = raw_jsonb.jsonb_item_type().unwrap();
     assert!(matches!(item_type, JsonbItemType::Boolean));
 
     let json = "false";
-    let jsonb = json.parse::<OwnedJsonb>().unwrap();
-    let raw_jsonb = jsonb.as_raw();
+    let jsonb_schema = json.parse::<OwnedJsonb>().unwrap();
+    let raw_jsonb = jsonb_schema.as_raw();
     let item_type = raw_jsonb.jsonb_item_type().unwrap();
     assert!(matches!(item_type, JsonbItemType::Boolean));
 
     // Test number value
     let json = "123.45";
-    let jsonb = json.parse::<OwnedJsonb>().unwrap();
-    let raw_jsonb = jsonb.as_raw();
+    let jsonb_schema = json.parse::<OwnedJsonb>().unwrap();
+    let raw_jsonb = jsonb_schema.as_raw();
     let item_type = raw_jsonb.jsonb_item_type().unwrap();
     assert!(matches!(item_type, JsonbItemType::Number));
 
     // Test string value
     let json = r#""hello world""#;
-    let jsonb = json.parse::<OwnedJsonb>().unwrap();
-    let raw_jsonb = jsonb.as_raw();
+    let jsonb_schema = json.parse::<OwnedJsonb>().unwrap();
+    let raw_jsonb = jsonb_schema.as_raw();
     let item_type = raw_jsonb.jsonb_item_type().unwrap();
     assert!(matches!(item_type, JsonbItemType::String));
 
     // Test array value
     let json = "[1, 2, 3, 4, 5]";
-    let jsonb = json.parse::<OwnedJsonb>().unwrap();
-    let raw_jsonb = jsonb.as_raw();
+    let jsonb_schema = json.parse::<OwnedJsonb>().unwrap();
+    let raw_jsonb = jsonb_schema.as_raw();
     let item_type = raw_jsonb.jsonb_item_type().unwrap();
     assert!(matches!(item_type, JsonbItemType::Array(5)));
 
     // Test empty array
     let json = "[]";
-    let jsonb = json.parse::<OwnedJsonb>().unwrap();
-    let raw_jsonb = jsonb.as_raw();
+    let jsonb_schema = json.parse::<OwnedJsonb>().unwrap();
+    let raw_jsonb = jsonb_schema.as_raw();
     let item_type = raw_jsonb.jsonb_item_type().unwrap();
     assert!(matches!(item_type, JsonbItemType::Array(0)));
 
     // Test object value
     let json = r#"{"name": "Alice", "age": 30, "active": true}"#;
-    let jsonb = json.parse::<OwnedJsonb>().unwrap();
-    let raw_jsonb = jsonb.as_raw();
+    let jsonb_schema = json.parse::<OwnedJsonb>().unwrap();
+    let raw_jsonb = jsonb_schema.as_raw();
     let item_type = raw_jsonb.jsonb_item_type().unwrap();
     assert!(matches!(item_type, JsonbItemType::Object(3)));
 
     // Test empty object
     let json = "{}";
-    let jsonb = json.parse::<OwnedJsonb>().unwrap();
-    let raw_jsonb = jsonb.as_raw();
+    let jsonb_schema = json.parse::<OwnedJsonb>().unwrap();
+    let raw_jsonb = jsonb_schema.as_raw();
     let item_type = raw_jsonb.jsonb_item_type().unwrap();
     assert!(matches!(item_type, JsonbItemType::Object(0)));
 }
@@ -2146,48 +2146,48 @@ fn test_jsonb_item_type() {
 fn test_to_value() {
     // Test null value
     let json = "null";
-    let jsonb = json.parse::<OwnedJsonb>().unwrap();
-    let raw_jsonb = jsonb.as_raw();
+    let jsonb_schema = json.parse::<OwnedJsonb>().unwrap();
+    let raw_jsonb = jsonb_schema.as_raw();
     let value = raw_jsonb.to_value().unwrap();
     assert!(value.is_null());
 
     // Test boolean values
     let json = "true";
-    let jsonb = json.parse::<OwnedJsonb>().unwrap();
-    let raw_jsonb = jsonb.as_raw();
+    let jsonb_schema = json.parse::<OwnedJsonb>().unwrap();
+    let raw_jsonb = jsonb_schema.as_raw();
     let value = raw_jsonb.to_value().unwrap();
     assert!(value.as_bool().unwrap());
 
     let json = "false";
-    let jsonb = json.parse::<OwnedJsonb>().unwrap();
-    let raw_jsonb = jsonb.as_raw();
+    let jsonb_schema = json.parse::<OwnedJsonb>().unwrap();
+    let raw_jsonb = jsonb_schema.as_raw();
     let value = raw_jsonb.to_value().unwrap();
     assert!(!value.as_bool().unwrap());
 
     // Test number values
     let json = "123";
-    let jsonb = json.parse::<OwnedJsonb>().unwrap();
-    let raw_jsonb = jsonb.as_raw();
+    let jsonb_schema = json.parse::<OwnedJsonb>().unwrap();
+    let raw_jsonb = jsonb_schema.as_raw();
     let value = raw_jsonb.to_value().unwrap();
     assert_eq!(value.as_i64().unwrap(), 123);
 
     let json = "123.45";
-    let jsonb = json.parse::<OwnedJsonb>().unwrap();
-    let raw_jsonb = jsonb.as_raw();
+    let jsonb_schema = json.parse::<OwnedJsonb>().unwrap();
+    let raw_jsonb = jsonb_schema.as_raw();
     let value = raw_jsonb.to_value().unwrap();
     assert_eq!(value.as_f64().unwrap(), 123.45);
 
     // Test string value
     let json = r#""hello world""#;
-    let jsonb = json.parse::<OwnedJsonb>().unwrap();
-    let raw_jsonb = jsonb.as_raw();
+    let jsonb_schema = json.parse::<OwnedJsonb>().unwrap();
+    let raw_jsonb = jsonb_schema.as_raw();
     let value = raw_jsonb.to_value().unwrap();
     assert_eq!(value.as_str().unwrap(), "hello world");
 
     // Test array value
     let json = "[1, 2, 3, 4, 5]";
-    let jsonb = json.parse::<OwnedJsonb>().unwrap();
-    let raw_jsonb = jsonb.as_raw();
+    let jsonb_schema = json.parse::<OwnedJsonb>().unwrap();
+    let raw_jsonb = jsonb_schema.as_raw();
     let value = raw_jsonb.to_value().unwrap();
     if let Value::Array(arr) = value {
         assert_eq!(arr.len(), 5);
@@ -2200,8 +2200,8 @@ fn test_to_value() {
 
     // Test simple object
     let json = r#"{"name": "Alice", "age": 30, "active": true}"#;
-    let jsonb = json.parse::<OwnedJsonb>().unwrap();
-    let raw_jsonb = jsonb.as_raw();
+    let jsonb_schema = json.parse::<OwnedJsonb>().unwrap();
+    let raw_jsonb = jsonb_schema.as_raw();
     let value = raw_jsonb.to_value().unwrap();
     if let Value::Object(obj) = value {
         assert_eq!(obj.len(), 3);
@@ -2214,8 +2214,8 @@ fn test_to_value() {
 
     // Test nested object with array
     let json = r#"{"user": {"name": "Bob", "scores": [85, 90, 95]}}"#;
-    let jsonb = json.parse::<OwnedJsonb>().unwrap();
-    let raw_jsonb = jsonb.as_raw();
+    let jsonb_schema = json.parse::<OwnedJsonb>().unwrap();
+    let raw_jsonb = jsonb_schema.as_raw();
     let value = raw_jsonb.to_value().unwrap();
     if let Value::Object(obj) = value {
         assert_eq!(obj.len(), 1);

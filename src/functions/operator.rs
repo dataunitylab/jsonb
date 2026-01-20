@@ -63,7 +63,7 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// // Type checking
     /// let arr_jsonb = "[1, 2, 3]".parse::<OwnedJsonb>().unwrap();
@@ -158,7 +158,7 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// // Example 1: Array containment
     /// let left_jsonb = "[1, 2, 3]".parse::<OwnedJsonb>().unwrap();
@@ -304,7 +304,7 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// let jsonb_value = r#"{"a": "hello", "b": [1, "world", {"c": "rust"}]}"#
     ///     .parse::<OwnedJsonb>()
@@ -406,7 +406,7 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// // Object + Object
     /// let obj1 = r#"{"a": 1, "b": 2}"#.parse::<OwnedJsonb>().unwrap();
@@ -521,7 +521,7 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// // Object with nulls
     /// let obj_with_nulls = r#"{"a": 1, "b": null, "c": 3}"#.parse::<OwnedJsonb>().unwrap();
@@ -602,7 +602,7 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// let json1 = r#"{"a":1,"b":"hello"}"#.parse::<OwnedJsonb>().unwrap();
     /// let json2 = r#"{"a":1,"b":"world"}"#.parse::<OwnedJsonb>().unwrap();

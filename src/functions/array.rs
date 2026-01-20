@@ -42,7 +42,7 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// let arr_jsonb = "[1,2,3]".parse::<OwnedJsonb>().unwrap();
     /// let raw_jsonb = arr_jsonb.as_raw();
@@ -81,7 +81,7 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// // Array values extraction
     /// let arr_jsonb = r#"[1, "hello", {"a": 1}]"#.parse::<OwnedJsonb>().unwrap();
@@ -148,7 +148,7 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// // Array with duplicates
     /// let arr_jsonb = r#"[1, 2, 2, 3, 1, 4]"#.parse::<OwnedJsonb>().unwrap();
@@ -220,7 +220,7 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// // Array intersection
     /// let arr1 = r#"[1, 2, 2, 3]"#.parse::<OwnedJsonb>().unwrap();
@@ -325,7 +325,7 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// // Array except
     /// let arr1 = r#"[1, 2, 2, 3]"#.parse::<OwnedJsonb>().unwrap();
@@ -425,7 +425,7 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// // Array overlap
     /// let arr1 = r#"[1, 2, 3]"#.parse::<OwnedJsonb>().unwrap();
@@ -526,7 +526,7 @@ impl RawJsonb<'_> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::OwnedJsonb;
+    /// use jsonb_schema::OwnedJsonb;
     ///
     /// let arr_jsonb = "[1, 2, 3]".parse::<OwnedJsonb>().unwrap();
     /// let raw_jsonb = arr_jsonb.as_raw();

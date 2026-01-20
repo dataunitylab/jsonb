@@ -62,8 +62,8 @@ pub(crate) const DECIMAL64_MAX: i128 = 999_999_999_999_999_999i128;
 pub(crate) const DECIMAL128_MIN: i128 = -99_999_999_999_999_999_999_999_999_999_999_999_999i128;
 pub(crate) const DECIMAL128_MAX: i128 = 99_999_999_999_999_999_999_999_999_999_999_999_999i128;
 
-pub(crate) const NUMBER_STRUCT_TOKEN: &str = "$jsonb::private::Number";
-pub(crate) const NUMBER_STRUCT_FIELD_SCALE: &str = "$jsonb::private::Number::Scale";
-pub(crate) const NUMBER_STRUCT_FIELD_VALUE: &str = "$jsonb::private::Number::Value";
-pub(crate) const NUMBER_STRUCT_FIELD_HIGH_VALUE: &str = "$jsonb::private::Number::High_Value";
-pub(crate) const NUMBER_STRUCT_FIELD_LOW_VALUE: &str = "$jsonb::private::Number::Low_Value";
+pub(crate) const NUMBER_STRUCT_TOKEN: &str = "$jsonb_schema::private::Number";
+pub(crate) const NUMBER_STRUCT_FIELD_SCALE: &str = "$jsonb_schema::private::Number::Scale";
+pub(crate) const NUMBER_STRUCT_FIELD_VALUE: &str = "$jsonb_schema::private::Number::Value";
+pub(crate) const NUMBER_STRUCT_FIELD_HIGH_VALUE: &str = "$jsonb_schema::private::Number::High_Value";
+pub(crate) const NUMBER_STRUCT_FIELD_LOW_VALUE: &str = "$jsonb_schema::private::Number::Low_Value";

@@ -91,7 +91,7 @@ impl<'a> RawJsonb<'a> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::{OwnedJsonb, core::JsonbItemType};
+    /// use jsonb_schema::{OwnedJsonb, core::JsonbItemType};
     ///
     /// // Create a JSONB containing an array
     /// let jsonb = "[1, 2, 3]".parse::<OwnedJsonb>().unwrap();
@@ -159,7 +159,7 @@ impl<'a> RawJsonb<'a> {
     /// # Examples
     ///
     /// ```rust
-    /// use jsonb::{OwnedJsonb, Value};
+    /// use jsonb_schema::{OwnedJsonb, Value};
     ///
     /// // Parse a simple JSON object
     /// let jsonb = r#"{"name": "Alice", "age": 30, "is_student": false}"#.parse::<OwnedJsonb>().unwrap();
