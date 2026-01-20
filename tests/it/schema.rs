@@ -13,6 +13,8 @@ fn test_schema_serialization() {
         required: None,
         minimum: None,
         maximum: None,
+        enum_values: None,
+        const_value: None,
     });
     
     let mut required = BTreeSet::new();
@@ -24,6 +26,8 @@ fn test_schema_serialization() {
         required: Some(required),
         minimum: None,
         maximum: None,
+        enum_values: None,
+        const_value: None,
     };
 
     let json = serde_json::to_string(&schema).unwrap();
@@ -57,6 +61,8 @@ fn test_schema_encoding_decoding() {
         required: None,
         minimum: None,
         maximum: None,
+        enum_values: None,
+        const_value: None,
     });
     properties.insert("b".to_string(), Schema {
         instance_type: Some(SingleOrVec::Single(InstanceType::String)),
@@ -64,6 +70,8 @@ fn test_schema_encoding_decoding() {
         required: None,
         minimum: None,
         maximum: None,
+        enum_values: None,
+        const_value: None,
     });
     
     let mut required = BTreeSet::new();
@@ -76,6 +84,8 @@ fn test_schema_encoding_decoding() {
         required: Some(required),
         minimum: None,
         maximum: None,
+        enum_values: None,
+        const_value: None,
     };
 
     // Value: {"a": 10, "b": "hello"}
@@ -101,6 +111,8 @@ fn test_schema_encoding_extra_keys() {
         required: None,
         minimum: None,
         maximum: None,
+        enum_values: None,
+        const_value: None,
     });
     
     let mut required = BTreeSet::new();
@@ -112,6 +124,8 @@ fn test_schema_encoding_extra_keys() {
         required: Some(required),
         minimum: None,
         maximum: None,
+        enum_values: None,
+        const_value: None,
     };
 
     // Value: {"a": 10, "c": true}
@@ -137,6 +151,8 @@ fn test_delta_encoding_integers() {
         required: None,
         minimum: Some(min_val),
         maximum: None,
+        enum_values: None,
+        const_value: None,
     };
 
     let val = 1005; // delta is 5

@@ -11,12 +11,25 @@ const TAG_STRING: u8 = 0x04;
 const TAG_ARRAY: u8 = 0x05;
 const TAG_OBJECT: u8 = 0x06;
 
+use crate::from_raw_jsonb;
+
 pub fn encode(value: &Value, schema: &Schema, buf: &mut Vec<u8>) {
     encode_value(value, Some(schema), buf);
 }
 
 fn encode_value(value: &Value, schema: Option<&Schema>, buf: &mut Vec<u8>) {
     if let Some(schema) = schema {
+        if schema.const_value.is_some() {
+            return;
+        }
+        if let Some(enums) = &schema.enum_values {
+            let serde_val = to_serde_value(value);
+            if let Some(idx) = enums.iter().position(|v| v == &serde_val) {
+                write_uvarint(buf, idx as u64);
+                return;
+            }
+        }
+
         match &schema.instance_type {
             Some(SingleOrVec::Single(instance_type)) => {
                 encode_typed_value(value, instance_type, schema, buf);
@@ -44,6 +57,13 @@ fn encode_value(value: &Value, schema: Option<&Schema>, buf: &mut Vec<u8>) {
     }
     // Fallback or untyped
     encode_untyped_value(value, buf);
+}
+
+fn to_serde_value(value: &Value) -> serde_json::Value {
+    // Convert jsonb::Value to RawJsonb then to serde_json::Value
+    let vec = value.to_vec();
+    let raw = crate::RawJsonb::new(&vec);
+    from_raw_jsonb(&raw).unwrap()
 }
 
 fn encode_typed_value(value: &Value, instance_type: &InstanceType, schema: &Schema, buf: &mut Vec<u8>) {

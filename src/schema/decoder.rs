@@ -19,6 +19,18 @@ pub fn decode(buf: &[u8], schema: &Schema) -> Value<'static> {
 
 fn decode_value(cursor: &mut Cursor<&[u8]>, schema: Option<&Schema>) -> Value<'static> {
      if let Some(schema) = schema {
+        if let Some(c) = &schema.const_value {
+            return serde_to_jsonb_value(c);
+        }
+        if let Some(enums) = &schema.enum_values {
+            let idx = read_uvarint(cursor) as usize;
+            if idx < enums.len() {
+                return serde_to_jsonb_value(&enums[idx]);
+            }
+            // Fallback or error? Assuming valid encoding.
+            return Value::Null;
+        }
+
         match &schema.instance_type {
             Some(SingleOrVec::Single(instance_type)) => {
                  return decode_typed_value(cursor, instance_type, schema);
@@ -30,48 +42,7 @@ fn decode_value(cursor: &mut Cursor<&[u8]>, schema: Option<&Schema>) -> Value<'s
                 if tag == TAG_NUMBER {
                     if types.contains(&InstanceType::Integer) || types.contains(&InstanceType::Number) {
                         if let Some(min) = schema.minimum {
-                            // It might be delta encoded.
-                            // Standard TAG_NUMBER is followed by len (uvarint).
-                            // Delta encoding is followed by delta (uvarint).
-                            // Ambiguity?
-                            // Yes, if we don't know which one it is.
-                            // But `encode_value` writes TAG_NUMBER + delta ONLY IF criteria met.
-                            // Does `encode_untyped_value` write TAG_NUMBER + len? Yes.
-                            // Is there a way to distinguish?
-                            // If `encode_value` used the optimization, we MUST decode it as delta.
-                            // If it didn't (e.g. value < min), it would fallback to untyped?
-                            // Wait, my encoder logic for Vec falls back to untyped if val < min.
-                            // So if I see TAG_NUMBER, it could be Delta OR Standard.
-                            // How to distinguish?
-                            // Standard starts with length of bytes.
-                            // Delta starts with value.
-                            // We can't easily distinguish.
-                            //
-                            // FIX: The encoder MUST effectively "override" the tag meaning for this schema context.
-                            // If schema allows Integer/Number AND has minimum:
-                            // We define that TAG_NUMBER *always* means Delta Encoding for this schema context?
-                            // But what if value < minimum?
-                            // Then we can't represent it as delta (u128).
-                            // So we shouldn't use TAG_NUMBER for standard if we enforce this rule.
-                            // We would need to fail or use a different tag?
-                            // But we only have standard tags.
-                            //
-                            // Alternative: Since this is "compact encoding", we assume values conform to schema constraints (min/max).
-                            // If value < min, it violates schema. We might not care to support it efficiently or at all in "typed" mode.
-                            // But `encode_untyped_value` supports anything.
-                            //
-                            // Let's assume for this task that if `minimum` is present, all encoded numbers for this schema ARE delta encoded.
-                            // If value < min, the encoder logic I wrote skips delta. It calls `encode_untyped_value`.
-                            // `encode_untyped_value` writes TAG_NUMBER + standard.
-                            // So we have a collision on TAG_NUMBER.
-                            //
-                            // To solve this properly, we need to ensure the Decoder knows which path was taken.
-                            // Since we can't change the Tag, we assume:
-                            // If Schema has Minimum -> TAG_NUMBER means Delta.
-                            // If Value < Minimum -> Encoder should NOT use TAG_NUMBER?
-                            // It could use a different tag? No custom tags allowed easily.
-                            // Or we assume valid data (>= min).
-                            
+                            // Delta encoding
                             let delta = read_uvarint128(cursor);
                             let val = min + delta as i128;
                             if let Ok(v) = i64::try_from(val) {
@@ -81,15 +52,49 @@ fn decode_value(cursor: &mut Cursor<&[u8]>, schema: Option<&Schema>) -> Value<'s
                         }
                     }
                 }
-                // Reset cursor if we peeked (though we consumed tag, so back 1)
-                // Actually `read_byte` advances. `decode_untyped_value` reads tag again.
-                // So we need to reset to `pos`.
+                // Reset cursor
                 cursor.set_position(pos);
             }
             None => {}
         }
     }
     decode_untyped_value(cursor)
+}
+
+fn serde_to_jsonb_value(v: &serde_json::Value) -> Value<'static> {
+    match v {
+        serde_json::Value::Null => Value::Null,
+        serde_json::Value::Bool(b) => Value::Bool(*b),
+        serde_json::Value::Number(n) => {
+            if let Some(i) = n.as_i64() {
+                Value::Number(Number::Int64(i))
+            } else if let Some(u) = n.as_u64() {
+                Value::Number(Number::UInt64(u))
+            } else if let Some(f) = n.as_f64() {
+                Value::Number(Number::Float64(f))
+            } else {
+                // Arbitrary precision fallback via string?
+                // jsonb::Number::decode handles it?
+                // For now, float fallback.
+                Value::Number(Number::Float64(n.as_f64().unwrap_or(0.0)))
+            }
+        },
+        serde_json::Value::String(s) => Value::String(Cow::Owned(s.clone())),
+        serde_json::Value::Array(arr) => {
+            let mut res = Vec::with_capacity(arr.len());
+            for item in arr {
+                res.push(serde_to_jsonb_value(item));
+            }
+            Value::Array(res)
+        },
+        serde_json::Value::Object(obj) => {
+            let mut res = BTreeMap::new();
+            for (k, val) in obj {
+                res.insert(k.clone(), serde_to_jsonb_value(val));
+            }
+            Value::Object(res)
+        }
+    }
 }
 
 fn decode_typed_value(cursor: &mut Cursor<&[u8]>, instance_type: &InstanceType, schema: &Schema) -> Value<'static> {

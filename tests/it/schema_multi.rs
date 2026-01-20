@@ -29,6 +29,8 @@ fn test_multi_type_encoding_decoding() {
         required: None,
         minimum: Some(1000),
         maximum: None,
+        enum_values: None,
+        const_value: None,
     };
 
     // Case 1: Integer (should be delta encoded if we implement it, or at least round-trip)
