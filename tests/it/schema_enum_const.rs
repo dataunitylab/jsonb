@@ -1,6 +1,6 @@
-use jsonb_schema::schema::{Schema, InstanceType, SingleOrVec, encode, decode};
-use jsonb_schema::Value;
+use jsonb_schema::schema::{decode, encode, InstanceType, Schema, SingleOrVec};
 use jsonb_schema::Number;
+use jsonb_schema::Value;
 use std::borrow::Cow;
 
 #[test]
@@ -12,7 +12,7 @@ fn test_const_value() {
 
     let val = Value::String(Cow::Borrowed("constant_string"));
     let mut buf = Vec::new();
-    
+
     // Encoder should write nothing
     encode(&val, &schema, &mut buf);
     assert!(buf.is_empty());

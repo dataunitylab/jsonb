@@ -65,5 +65,6 @@ pub(crate) const DECIMAL128_MAX: i128 = 99_999_999_999_999_999_999_999_999_999_9
 pub(crate) const NUMBER_STRUCT_TOKEN: &str = "$jsonb_schema::private::Number";
 pub(crate) const NUMBER_STRUCT_FIELD_SCALE: &str = "$jsonb_schema::private::Number::Scale";
 pub(crate) const NUMBER_STRUCT_FIELD_VALUE: &str = "$jsonb_schema::private::Number::Value";
-pub(crate) const NUMBER_STRUCT_FIELD_HIGH_VALUE: &str = "$jsonb_schema::private::Number::High_Value";
+pub(crate) const NUMBER_STRUCT_FIELD_HIGH_VALUE: &str =
+    "$jsonb_schema::private::Number::High_Value";
 pub(crate) const NUMBER_STRUCT_FIELD_LOW_VALUE: &str = "$jsonb_schema::private::Number::Low_Value";

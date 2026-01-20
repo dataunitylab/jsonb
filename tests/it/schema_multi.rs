@@ -1,8 +1,8 @@
-use std::collections::{BTreeMap, BTreeSet};
-use jsonb_schema::schema::{Schema, InstanceType, SingleOrVec, encode, decode};
-use jsonb_schema::Value;
+use jsonb_schema::schema::{decode, encode, InstanceType, Schema, SingleOrVec};
 use jsonb_schema::Number;
+use jsonb_schema::Value;
 use std::borrow::Cow;
+use std::collections::{BTreeMap, BTreeSet};
 
 #[test]
 fn test_schema_multi_type_serialization() {
@@ -14,7 +14,7 @@ fn test_schema_multi_type_serialization() {
             assert!(types.contains(&InstanceType::String));
             assert!(types.contains(&InstanceType::Integer));
             assert!(types.contains(&InstanceType::Null));
-        },
+        }
         _ => panic!("Expected Vec"),
     }
 }
@@ -24,7 +24,10 @@ fn test_multi_type_encoding_decoding() {
     // Schema: {"type": ["integer", "string"], "minimum": 1000}
     // "minimum" applies if it's an integer.
     let schema = Schema {
-        instance_type: Some(SingleOrVec::Vec(vec![InstanceType::Integer, InstanceType::String])),
+        instance_type: Some(SingleOrVec::Vec(vec![
+            InstanceType::Integer,
+            InstanceType::String,
+        ])),
         properties: None,
         required: None,
         minimum: Some(1000),

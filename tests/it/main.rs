@@ -20,5 +20,5 @@ mod keypath_parser;
 mod number;
 mod parser;
 mod schema;
-mod schema_multi;
 mod schema_enum_const;
+mod schema_multi;

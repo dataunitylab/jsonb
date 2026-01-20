@@ -1,4 +1,4 @@
-use crate::schema::{Schema, InstanceType, SingleOrVec};
+use crate::schema::{InstanceType, Schema, SingleOrVec};
 use crate::Value;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -38,7 +38,9 @@ fn encode_value(value: &Value, schema: Option<&Schema>, buf: &mut Vec<u8>) {
             Some(SingleOrVec::Vec(types)) => {
                 // Check if we can use delta encoding for numbers in a union
                 if let Value::Number(n) = value {
-                    if types.contains(&InstanceType::Integer) || types.contains(&InstanceType::Number) {
+                    if types.contains(&InstanceType::Integer)
+                        || types.contains(&InstanceType::Number)
+                    {
                         if let Some(min) = schema.minimum {
                             if let Some(val) = n.as_i128() {
                                 if val >= min {
@@ -66,14 +68,19 @@ fn to_serde_value(value: &Value) -> serde_json::Value {
     from_raw_jsonb(&raw).unwrap()
 }
 
-fn encode_typed_value(value: &Value, instance_type: &InstanceType, schema: &Schema, buf: &mut Vec<u8>) {
+fn encode_typed_value(
+    value: &Value,
+    instance_type: &InstanceType,
+    schema: &Schema,
+    buf: &mut Vec<u8>,
+) {
     match (instance_type, value) {
         (InstanceType::Null, _) => {
             // Null is 0 bytes if typed
-        },
+        }
         (InstanceType::Boolean, Value::Bool(b)) => {
             buf.push(if *b { 1 } else { 0 });
-        },
+        }
         (InstanceType::Number, Value::Number(n)) | (InstanceType::Integer, Value::Number(n)) => {
             if let Some(min) = schema.minimum {
                 if let Some(val) = n.as_i128() {
@@ -88,11 +95,11 @@ fn encode_typed_value(value: &Value, instance_type: &InstanceType, schema: &Sche
             let _ = n.compact_encode(&mut temp).unwrap();
             write_uvarint(buf, temp.len() as u64);
             buf.extend_from_slice(&temp);
-        },
+        }
         (InstanceType::String, Value::String(s)) => {
-             write_uvarint(buf, s.len() as u64);
-             buf.extend_from_slice(s.as_bytes());
-        },
+            write_uvarint(buf, s.len() as u64);
+            buf.extend_from_slice(s.as_bytes());
+        }
         (InstanceType::Object, Value::Object(obj)) => {
             let required_default = BTreeSet::new();
             let required = schema.required.as_ref().unwrap_or(&required_default);
@@ -101,11 +108,11 @@ fn encode_typed_value(value: &Value, instance_type: &InstanceType, schema: &Sche
 
             // 1. Required keys
             for key in required {
-                 let val = obj.get(key).unwrap_or(&Value::Null); 
-                 let sub_schema = properties.get(key);
-                 encode_value(val, sub_schema, buf);
+                let val = obj.get(key).unwrap_or(&Value::Null);
+                let sub_schema = properties.get(key);
+                encode_value(val, sub_schema, buf);
             }
-            
+
             // 2. Extra keys
             let mut extras = Vec::new();
             for (k, v) in obj {
@@ -113,23 +120,23 @@ fn encode_typed_value(value: &Value, instance_type: &InstanceType, schema: &Sche
                     extras.push((k, v));
                 }
             }
-            
+
             write_uvarint(buf, extras.len() as u64);
             for (k, v) in extras {
                 write_uvarint(buf, k.len() as u64);
                 buf.extend_from_slice(k.as_bytes());
                 encode_untyped_value(v, buf);
             }
-        },
-         (InstanceType::Array, Value::Array(arr)) => {
-             write_uvarint(buf, arr.len() as u64);
-             for v in arr {
-                 encode_untyped_value(v, buf);
-             }
-         },
-         _ => {
-             encode_untyped_value(value, buf);
-         }
+        }
+        (InstanceType::Array, Value::Array(arr)) => {
+            write_uvarint(buf, arr.len() as u64);
+            for v in arr {
+                encode_untyped_value(v, buf);
+            }
+        }
+        _ => {
+            encode_untyped_value(value, buf);
+        }
     }
 }
 
@@ -143,30 +150,30 @@ fn encode_untyped_value(value: &Value, buf: &mut Vec<u8>) {
             let _ = n.compact_encode(&mut temp).unwrap();
             write_uvarint(buf, temp.len() as u64);
             buf.extend_from_slice(&temp);
-        },
+        }
         Value::String(s) => {
             buf.push(TAG_STRING);
             write_uvarint(buf, s.len() as u64);
             buf.extend_from_slice(s.as_bytes());
-        },
+        }
         Value::Array(arr) => {
-             buf.push(TAG_ARRAY);
-             write_uvarint(buf, arr.len() as u64);
-             for v in arr {
-                 encode_untyped_value(v, buf);
-             }
-        },
+            buf.push(TAG_ARRAY);
+            write_uvarint(buf, arr.len() as u64);
+            for v in arr {
+                encode_untyped_value(v, buf);
+            }
+        }
         Value::Object(obj) => {
             buf.push(TAG_OBJECT);
             write_uvarint(buf, obj.len() as u64);
-             for (k, v) in obj {
+            for (k, v) in obj {
                 write_uvarint(buf, k.len() as u64);
                 buf.extend_from_slice(k.as_bytes());
                 encode_untyped_value(v, buf);
             }
-        },
+        }
         _ => {
-             buf.push(TAG_NULL);
+            buf.push(TAG_NULL);
         }
     }
 }

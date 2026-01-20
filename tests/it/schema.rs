@@ -1,22 +1,25 @@
-use std::collections::{BTreeMap, BTreeSet};
-use jsonb_schema::schema::{Schema, InstanceType, SingleOrVec, encode, decode};
-use jsonb_schema::Value;
+use jsonb_schema::schema::{decode, encode, InstanceType, Schema, SingleOrVec};
 use jsonb_schema::Number;
+use jsonb_schema::Value;
 use std::borrow::Cow;
+use std::collections::{BTreeMap, BTreeSet};
 
 #[test]
 fn test_schema_serialization() {
     let mut properties = BTreeMap::new();
-    properties.insert("name".to_string(), Schema {
-        instance_type: Some(SingleOrVec::Single(InstanceType::String)),
-        properties: None,
-        required: None,
-        minimum: None,
-        maximum: None,
-        enum_values: None,
-        const_value: None,
-    });
-    
+    properties.insert(
+        "name".to_string(),
+        Schema {
+            instance_type: Some(SingleOrVec::Single(InstanceType::String)),
+            properties: None,
+            required: None,
+            minimum: None,
+            maximum: None,
+            enum_values: None,
+            const_value: None,
+        },
+    );
+
     let mut required = BTreeSet::new();
     required.insert("name".to_string());
 
@@ -32,20 +35,23 @@ fn test_schema_serialization() {
 
     let json = serde_json::to_string(&schema).unwrap();
     // The order of map keys in JSON output depends on the map implementation. BTreeMap preserves order, so it should be deterministic.
-    assert_eq!(json, r#"{"type":"object","properties":{"name":{"type":"string"}},"required":["name"]}"#);
+    assert_eq!(
+        json,
+        r#"{"type":"object","properties":{"name":{"type":"string"}},"required":["name"]}"#
+    );
 }
 
 #[test]
 fn test_schema_deserialization() {
     let json = r#"{"type":["string", "null"],"required":[]}"#;
     let schema: Schema = serde_json::from_str(json).unwrap();
-    
+
     match schema.instance_type {
         Some(SingleOrVec::Vec(types)) => {
             assert_eq!(types.len(), 2);
             assert!(types.contains(&InstanceType::String));
             assert!(types.contains(&InstanceType::Null));
-        },
+        }
         _ => panic!("Expected Vec of types"),
     }
     assert!(schema.required.unwrap().is_empty());
@@ -55,25 +61,31 @@ fn test_schema_deserialization() {
 fn test_schema_encoding_decoding() {
     // Schema: {"type": "object", "properties": {"a": {"type": "integer"}, "b": {"type": "string"}}, "required": ["a", "b"]}
     let mut properties = BTreeMap::new();
-    properties.insert("a".to_string(), Schema {
-        instance_type: Some(SingleOrVec::Single(InstanceType::Integer)),
-        properties: None,
-        required: None,
-        minimum: None,
-        maximum: None,
-        enum_values: None,
-        const_value: None,
-    });
-    properties.insert("b".to_string(), Schema {
-        instance_type: Some(SingleOrVec::Single(InstanceType::String)),
-        properties: None,
-        required: None,
-        minimum: None,
-        maximum: None,
-        enum_values: None,
-        const_value: None,
-    });
-    
+    properties.insert(
+        "a".to_string(),
+        Schema {
+            instance_type: Some(SingleOrVec::Single(InstanceType::Integer)),
+            properties: None,
+            required: None,
+            minimum: None,
+            maximum: None,
+            enum_values: None,
+            const_value: None,
+        },
+    );
+    properties.insert(
+        "b".to_string(),
+        Schema {
+            instance_type: Some(SingleOrVec::Single(InstanceType::String)),
+            properties: None,
+            required: None,
+            minimum: None,
+            maximum: None,
+            enum_values: None,
+            const_value: None,
+        },
+    );
+
     let mut required = BTreeSet::new();
     required.insert("a".to_string());
     required.insert("b".to_string());
@@ -105,16 +117,19 @@ fn test_schema_encoding_decoding() {
 fn test_schema_encoding_extra_keys() {
     // Schema: {"type": "object", "properties": {"a": {"type": "integer"}}, "required": ["a"]}
     let mut properties = BTreeMap::new();
-    properties.insert("a".to_string(), Schema {
-        instance_type: Some(SingleOrVec::Single(InstanceType::Integer)),
-        properties: None,
-        required: None,
-        minimum: None,
-        maximum: None,
-        enum_values: None,
-        const_value: None,
-    });
-    
+    properties.insert(
+        "a".to_string(),
+        Schema {
+            instance_type: Some(SingleOrVec::Single(InstanceType::Integer)),
+            properties: None,
+            required: None,
+            minimum: None,
+            maximum: None,
+            enum_values: None,
+            const_value: None,
+        },
+    );
+
     let mut required = BTreeSet::new();
     required.insert("a".to_string());
 
@@ -162,17 +177,17 @@ fn test_delta_encoding_integers() {
     encode(&value, &schema, &mut buf);
 
     // Delta 5 encodes as uvarint(5) -> 0x05.
-    // Standard Int64 encoding for 1005 would be: 
+    // Standard Int64 encoding for 1005 would be:
     // compact_encode: NUMBER_INT (0x40) + i16 (2 bytes) = 3 bytes total (approx) + length prefix uvarint.
     // 1005 fits in i16.
     // Old encoding: uvarint(len) + [tag, bytes...]
     // New encoding: uvarint(delta) -> 1 byte.
-    
-    assert_eq!(buf.len(), 1); 
+
+    assert_eq!(buf.len(), 1);
     assert_eq!(buf[0], 0x05);
 
     let decoded = decode(&buf, &schema);
-    
+
     if let Value::Number(n) = decoded {
         assert_eq!(n.as_i64(), Some(val));
     } else {
