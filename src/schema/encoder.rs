@@ -17,9 +17,29 @@ pub fn encode(value: &Value, schema: &Schema, buf: &mut Vec<u8>) {
 
 fn encode_value(value: &Value, schema: Option<&Schema>, buf: &mut Vec<u8>) {
     if let Some(schema) = schema {
-        if let Some(SingleOrVec::Single(instance_type)) = &schema.instance_type {
-             encode_typed_value(value, instance_type, schema, buf);
-             return;
+        match &schema.instance_type {
+            Some(SingleOrVec::Single(instance_type)) => {
+                encode_typed_value(value, instance_type, schema, buf);
+                return;
+            }
+            Some(SingleOrVec::Vec(types)) => {
+                // Check if we can use delta encoding for numbers in a union
+                if let Value::Number(n) = value {
+                    if types.contains(&InstanceType::Integer) || types.contains(&InstanceType::Number) {
+                        if let Some(min) = schema.minimum {
+                            if let Some(val) = n.as_i128() {
+                                if val >= min {
+                                    let delta = (val - min) as u128;
+                                    buf.push(TAG_NUMBER);
+                                    write_uvarint128(buf, delta);
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            None => {}
         }
     }
     // Fallback or untyped

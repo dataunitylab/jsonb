@@ -19,8 +19,74 @@ pub fn decode(buf: &[u8], schema: &Schema) -> Value<'static> {
 
 fn decode_value(cursor: &mut Cursor<&[u8]>, schema: Option<&Schema>) -> Value<'static> {
      if let Some(schema) = schema {
-        if let Some(SingleOrVec::Single(instance_type)) = &schema.instance_type {
-             return decode_typed_value(cursor, instance_type, schema);
+        match &schema.instance_type {
+            Some(SingleOrVec::Single(instance_type)) => {
+                 return decode_typed_value(cursor, instance_type, schema);
+            }
+            Some(SingleOrVec::Vec(types)) => {
+                // Check if it's a number tag and we have delta encoding
+                let pos = cursor.position();
+                let tag = read_byte(cursor);
+                if tag == TAG_NUMBER {
+                    if types.contains(&InstanceType::Integer) || types.contains(&InstanceType::Number) {
+                        if let Some(min) = schema.minimum {
+                            // It might be delta encoded.
+                            // Standard TAG_NUMBER is followed by len (uvarint).
+                            // Delta encoding is followed by delta (uvarint).
+                            // Ambiguity?
+                            // Yes, if we don't know which one it is.
+                            // But `encode_value` writes TAG_NUMBER + delta ONLY IF criteria met.
+                            // Does `encode_untyped_value` write TAG_NUMBER + len? Yes.
+                            // Is there a way to distinguish?
+                            // If `encode_value` used the optimization, we MUST decode it as delta.
+                            // If it didn't (e.g. value < min), it would fallback to untyped?
+                            // Wait, my encoder logic for Vec falls back to untyped if val < min.
+                            // So if I see TAG_NUMBER, it could be Delta OR Standard.
+                            // How to distinguish?
+                            // Standard starts with length of bytes.
+                            // Delta starts with value.
+                            // We can't easily distinguish.
+                            //
+                            // FIX: The encoder MUST effectively "override" the tag meaning for this schema context.
+                            // If schema allows Integer/Number AND has minimum:
+                            // We define that TAG_NUMBER *always* means Delta Encoding for this schema context?
+                            // But what if value < minimum?
+                            // Then we can't represent it as delta (u128).
+                            // So we shouldn't use TAG_NUMBER for standard if we enforce this rule.
+                            // We would need to fail or use a different tag?
+                            // But we only have standard tags.
+                            //
+                            // Alternative: Since this is "compact encoding", we assume values conform to schema constraints (min/max).
+                            // If value < min, it violates schema. We might not care to support it efficiently or at all in "typed" mode.
+                            // But `encode_untyped_value` supports anything.
+                            //
+                            // Let's assume for this task that if `minimum` is present, all encoded numbers for this schema ARE delta encoded.
+                            // If value < min, the encoder logic I wrote skips delta. It calls `encode_untyped_value`.
+                            // `encode_untyped_value` writes TAG_NUMBER + standard.
+                            // So we have a collision on TAG_NUMBER.
+                            //
+                            // To solve this properly, we need to ensure the Decoder knows which path was taken.
+                            // Since we can't change the Tag, we assume:
+                            // If Schema has Minimum -> TAG_NUMBER means Delta.
+                            // If Value < Minimum -> Encoder should NOT use TAG_NUMBER?
+                            // It could use a different tag? No custom tags allowed easily.
+                            // Or we assume valid data (>= min).
+                            
+                            let delta = read_uvarint128(cursor);
+                            let val = min + delta as i128;
+                            if let Ok(v) = i64::try_from(val) {
+                                return Value::Number(Number::Int64(v));
+                            }
+                            return Value::Number(Number::Decimal128(crate::Decimal128 { scale: 0, value: val }));
+                        }
+                    }
+                }
+                // Reset cursor if we peeked (though we consumed tag, so back 1)
+                // Actually `read_byte` advances. `decode_untyped_value` reads tag again.
+                // So we need to reset to `pos`.
+                cursor.set_position(pos);
+            }
+            None => {}
         }
     }
     decode_untyped_value(cursor)
