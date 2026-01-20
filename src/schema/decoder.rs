@@ -34,6 +34,18 @@ fn decode_typed_value(cursor: &mut Cursor<&[u8]>, instance_type: &InstanceType, 
              Value::Bool(b)
         },
         InstanceType::Number | InstanceType::Integer => {
+            if let Some(min) = schema.minimum {
+                let delta = read_uvarint128(cursor);
+                // Convert u128 delta to i128 to add to min (i128)
+                let val = min + delta as i128;
+                // Try to fit in i64 if possible for cleaner Value
+                if let Ok(v) = i64::try_from(val) {
+                    return Value::Number(Number::Int64(v));
+                }
+                // Fallback to Decimal128 or just keep it as is if Number supported i128 directly
+                // Number supports Decimal128 which holds i128
+                return Value::Number(Number::Decimal128(crate::Decimal128 { scale: 0, value: val }));
+            }
             let len = read_uvarint(cursor) as usize;
             let bytes = read_bytes(cursor, len);
             let n = Number::decode(bytes).unwrap_or(Number::Int64(0));
@@ -149,6 +161,20 @@ fn read_uvarint(cursor: &mut Cursor<&[u8]>) -> u64 {
     loop {
         let b = read_byte(cursor);
         n |= ((b & 0x7F) as u64) << shift;
+        if (b & 0x80) == 0 {
+            break;
+        }
+        shift += 7;
+    }
+    n
+}
+
+fn read_uvarint128(cursor: &mut Cursor<&[u8]>) -> u128 {
+    let mut n: u128 = 0;
+    let mut shift = 0;
+    loop {
+        let b = read_byte(cursor);
+        n |= ((b & 0x7F) as u128) << shift;
         if (b & 0x80) == 0 {
             break;
         }

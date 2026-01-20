@@ -35,6 +35,15 @@ fn encode_typed_value(value: &Value, instance_type: &InstanceType, schema: &Sche
             buf.push(if *b { 1 } else { 0 });
         },
         (InstanceType::Number, Value::Number(n)) | (InstanceType::Integer, Value::Number(n)) => {
+            if let Some(min) = schema.minimum {
+                if let Some(val) = n.as_i128() {
+                    if val >= min {
+                        let delta = (val - min) as u128;
+                        write_uvarint128(buf, delta);
+                        return;
+                    }
+                }
+            }
             let mut temp = Vec::new();
             let _ = n.compact_encode(&mut temp).unwrap();
             write_uvarint(buf, temp.len() as u64);
@@ -123,6 +132,14 @@ fn encode_untyped_value(value: &Value, buf: &mut Vec<u8>) {
 }
 
 fn write_uvarint(buf: &mut Vec<u8>, mut n: u64) {
+    while n >= 0x80 {
+        buf.push((n as u8) | 0x80);
+        n >>= 7;
+    }
+    buf.push(n as u8);
+}
+
+fn write_uvarint128(buf: &mut Vec<u8>, mut n: u128) {
     while n >= 0x80 {
         buf.push((n as u8) | 0x80);
         n >>= 7;

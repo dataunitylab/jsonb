@@ -9,6 +9,10 @@ pub struct Schema {
     pub properties: Option<BTreeMap<String, Schema>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub required: Option<BTreeSet<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub minimum: Option<i128>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub maximum: Option<i128>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

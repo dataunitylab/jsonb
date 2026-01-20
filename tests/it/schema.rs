@@ -11,6 +11,8 @@ fn test_schema_serialization() {
         instance_type: Some(SingleOrVec::Single(InstanceType::String)),
         properties: None,
         required: None,
+        minimum: None,
+        maximum: None,
     });
     
     let mut required = BTreeSet::new();
@@ -20,6 +22,8 @@ fn test_schema_serialization() {
         instance_type: Some(SingleOrVec::Single(InstanceType::Object)),
         properties: Some(properties),
         required: Some(required),
+        minimum: None,
+        maximum: None,
     };
 
     let json = serde_json::to_string(&schema).unwrap();
@@ -51,11 +55,15 @@ fn test_schema_encoding_decoding() {
         instance_type: Some(SingleOrVec::Single(InstanceType::Integer)),
         properties: None,
         required: None,
+        minimum: None,
+        maximum: None,
     });
     properties.insert("b".to_string(), Schema {
         instance_type: Some(SingleOrVec::Single(InstanceType::String)),
         properties: None,
         required: None,
+        minimum: None,
+        maximum: None,
     });
     
     let mut required = BTreeSet::new();
@@ -66,6 +74,8 @@ fn test_schema_encoding_decoding() {
         instance_type: Some(SingleOrVec::Single(InstanceType::Object)),
         properties: Some(properties),
         required: Some(required),
+        minimum: None,
+        maximum: None,
     };
 
     // Value: {"a": 10, "b": "hello"}
@@ -89,6 +99,8 @@ fn test_schema_encoding_extra_keys() {
         instance_type: Some(SingleOrVec::Single(InstanceType::Integer)),
         properties: None,
         required: None,
+        minimum: None,
+        maximum: None,
     });
     
     let mut required = BTreeSet::new();
@@ -98,6 +110,8 @@ fn test_schema_encoding_extra_keys() {
         instance_type: Some(SingleOrVec::Single(InstanceType::Object)),
         properties: Some(properties),
         required: Some(required),
+        minimum: None,
+        maximum: None,
     };
 
     // Value: {"a": 10, "c": true}
@@ -111,4 +125,41 @@ fn test_schema_encoding_extra_keys() {
 
     let decoded = decode(&buf, &schema);
     assert_eq!(value, decoded);
+}
+
+#[test]
+fn test_delta_encoding_integers() {
+    let min_val = 1000;
+    // Schema: {"type": "integer", "minimum": 1000}
+    let schema = Schema {
+        instance_type: Some(SingleOrVec::Single(InstanceType::Integer)),
+        properties: None,
+        required: None,
+        minimum: Some(min_val),
+        maximum: None,
+    };
+
+    let val = 1005; // delta is 5
+    let value = Value::Number(Number::Int64(val));
+
+    let mut buf = Vec::new();
+    encode(&value, &schema, &mut buf);
+
+    // Delta 5 encodes as uvarint(5) -> 0x05.
+    // Standard Int64 encoding for 1005 would be: 
+    // compact_encode: NUMBER_INT (0x40) + i16 (2 bytes) = 3 bytes total (approx) + length prefix uvarint.
+    // 1005 fits in i16.
+    // Old encoding: uvarint(len) + [tag, bytes...]
+    // New encoding: uvarint(delta) -> 1 byte.
+    
+    assert_eq!(buf.len(), 1); 
+    assert_eq!(buf[0], 0x05);
+
+    let decoded = decode(&buf, &schema);
+    
+    if let Value::Number(n) = decoded {
+        assert_eq!(n.as_i64(), Some(val));
+    } else {
+        panic!("Expected Number");
+    }
 }
