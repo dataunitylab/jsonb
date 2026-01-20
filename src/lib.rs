@@ -75,6 +75,7 @@ mod number;
 mod owned;
 mod parser;
 mod raw;
+pub mod schema;
 mod util;
 mod value;
 

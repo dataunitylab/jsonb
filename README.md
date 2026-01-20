@@ -56,6 +56,64 @@ The `jsonb` encoding format is a tree-like structure. Each node contains a conta
 0x76          string encoding value ("v")
 ```
 
+## Schema-based Compact Encoding
+
+This experimental feature aims to minimize storage size by leveraging JSON Schema (version 2020-12). When a schema is available, redundant structural and type information can be omitted from the binary encoding.
+
+### Principles
+
+1.  **Type Omission**: If a schema specifies a single type for a value, the type header is omitted.
+2.  **Key Omission**: For `required` properties in an object, keys are omitted. Values are encoded in the order specified by the `required` array.
+3.  **Structure Omission**: If the container type (Object/Array) is known, the container header might be simplified or omitted.
+
+### Examples
+
+#### 1. Fully Typed Object
+
+**Schema:**
+```json
+{
+  "type": "object",
+  "properties": {
+    "a": { "type": "integer" },
+    "b": { "type": "string" }
+  },
+  "required": ["a", "b"]
+}
+```
+
+**JSON Data:**
+```json
+{ "a": 10, "b": "hello" }
+```
+
+**Standard JSONB Encoding (Conceptual):**
+- Object Header
+- Key "a"
+- Integer Header + Value (10)
+- Key "b"
+- String Header + Value ("hello")
+
+**Schema-based Encoding:**
+- Integer Value (10)  <-- No type header, no key
+- String Value ("hello") <-- No type header, no key
+
+*Note: Since the schema dictates that the first required element is an integer and the second is a string, the parser reads them directly.*
+
+#### 2. Partially Typed Object (Extra Keys)
+
+If a document contains keys not defined as required in the schema, they must be encoded with their key and type information, typically following the schema-defined fields.
+
+**JSON Data:**
+```json
+{ "a": 10, "b": "hello", "c": true }
+```
+
+**Schema-based Encoding:**
+- Integer Value (10)  <-- Schema-defined 'a'
+- String Value ("hello") <-- Schema-defined 'b'
+- Key "c" + Boolean Header (True) <-- Extra key 'c' requires standard encoding information
+
 ## Jsonb value
 
 The `jsonb` value is an enumeration that represents all kinds of `JSON` values and serves as an intermediate for converting other data types to the `jsonb` binary format value.
