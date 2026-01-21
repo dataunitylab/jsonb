@@ -17,6 +17,7 @@ const TAG_DATE_TIME_COMPRESSED: u8 = 0x03;
 const TAG_IPV4_COMPRESSED: u8 = 0x04;
 const TAG_IPV6_COMPRESSED: u8 = 0x05;
 const TAG_UUID_COMPRESSED: u8 = 0x06;
+const TAG_PATTERN_COMPRESSED: u8 = 0x07;
 const TAG_STRING_UNCOMPRESSED: u8 = 0x00;
 
 use crate::from_raw_jsonb;
@@ -319,6 +320,35 @@ fn encode_typed_value(
                     }
                     buf.push(TAG_STRING_UNCOMPRESSED);
                 }
+            } else if schema.pattern_prefix.is_some() || schema.pattern_suffix.is_some() {
+                let mut s_slice: &str = &s;
+                let mut matches = true;
+
+                if let Some(prefix) = &schema.pattern_prefix {
+                    if s_slice.starts_with(prefix) {
+                        s_slice = &s_slice[prefix.len()..];
+                    } else {
+                        matches = false;
+                    }
+                }
+
+                if matches {
+                    if let Some(suffix) = &schema.pattern_suffix {
+                        if s_slice.ends_with(suffix) {
+                            s_slice = &s_slice[..s_slice.len() - suffix.len()];
+                        } else {
+                            matches = false;
+                        }
+                    }
+                }
+
+                if matches {
+                    buf.push(TAG_PATTERN_COMPRESSED);
+                    write_uvarint(buf, s_slice.len() as u64);
+                    buf.extend_from_slice(s_slice.as_bytes());
+                    return;
+                }
+                buf.push(TAG_STRING_UNCOMPRESSED);
             }
             write_uvarint(buf, s.len() as u64);
             buf.extend_from_slice(s.as_bytes());

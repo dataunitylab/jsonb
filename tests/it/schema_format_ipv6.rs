@@ -16,6 +16,9 @@ fn test_format_ipv6_compression() {
         enum_values: None,
         const_value: None,
         format: Some("ipv6".to_string()),
+        pattern: None,
+        pattern_prefix: None,
+        pattern_suffix: None,
     };
 
     let ip_str = "2001:db8::1";
@@ -55,6 +58,9 @@ fn test_format_ipv6_fallback() {
         enum_values: None,
         const_value: None,
         format: Some("ipv6".to_string()),
+        pattern: None,
+        pattern_prefix: None,
+        pattern_suffix: None,
     };
 
     let invalid_ip = "not-an-ipv6-address";

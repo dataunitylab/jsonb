@@ -16,6 +16,9 @@ fn test_format_time_compression_z() {
         enum_values: None,
         const_value: None,
         format: Some("time".to_string()),
+        pattern: None,
+        pattern_prefix: None,
+        pattern_suffix: None,
     };
 
     let time_str = "20:20:39Z";
@@ -61,6 +64,9 @@ fn test_format_time_compression_offset() {
         enum_values: None,
         const_value: None,
         format: Some("time".to_string()),
+        pattern: None,
+        pattern_prefix: None,
+        pattern_suffix: None,
     };
 
     let time_str = "20:20:39.4+03:30";
@@ -102,6 +108,9 @@ fn test_format_time_fallback() {
         enum_values: None,
         const_value: None,
         format: Some("time".to_string()),
+        pattern: None,
+        pattern_prefix: None,
+        pattern_suffix: None,
     };
 
     let invalid_time = "invalid-time";

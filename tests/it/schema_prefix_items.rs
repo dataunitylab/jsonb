@@ -25,6 +25,9 @@ fn test_prefix_items_optimization() {
             enum_values: None,
             const_value: None,
             format: None,
+            pattern: None,
+            pattern_prefix: None,
+            pattern_suffix: None,
         },
         Schema {
             instance_type: Some(SingleOrVec::Single(InstanceType::String)),
@@ -38,6 +41,9 @@ fn test_prefix_items_optimization() {
             enum_values: None,
             const_value: None,
             format: None,
+            pattern: None,
+            pattern_prefix: None,
+            pattern_suffix: None,
         },
     ];
 
@@ -53,6 +59,9 @@ fn test_prefix_items_optimization() {
         enum_values: None,
         const_value: None,
         format: None,
+        pattern: None,
+        pattern_prefix: None,
+        pattern_suffix: None,
     };
 
     // Value: [10, "hello", true]
@@ -127,6 +136,9 @@ fn test_items_optimization() {
         enum_values: None,
         const_value: None,
         format: None,
+        pattern: None,
+        pattern_prefix: None,
+        pattern_suffix: None,
     };
 
     let schema = Schema {
@@ -141,6 +153,9 @@ fn test_items_optimization() {
         enum_values: None,
         const_value: None,
         format: None,
+        pattern: None,
+        pattern_prefix: None,
+        pattern_suffix: None,
     };
 
     // Value: [10, 20]
@@ -182,6 +197,9 @@ fn test_prefix_items_and_items_optimization() {
         enum_values: None,
         const_value: None,
         format: None,
+        pattern: None,
+        pattern_prefix: None,
+        pattern_suffix: None,
     }];
 
     let items_schema = Schema {
@@ -196,6 +214,9 @@ fn test_prefix_items_and_items_optimization() {
         enum_values: None,
         const_value: None,
         format: None,
+        pattern: None,
+        pattern_prefix: None,
+        pattern_suffix: None,
     };
 
     let schema = Schema {
@@ -210,6 +231,9 @@ fn test_prefix_items_and_items_optimization() {
         enum_values: None,
         const_value: None,
         format: None,
+        pattern: None,
+        pattern_prefix: None,
+        pattern_suffix: None,
     };
 
     // Value: ["start", 10, 20]

@@ -16,6 +16,9 @@ fn test_format_date_compression() {
         enum_values: None,
         const_value: None,
         format: Some("date".to_string()),
+        pattern: None,
+        pattern_prefix: None,
+        pattern_suffix: None,
     };
 
     let date_str = "2023-10-25";
@@ -52,6 +55,9 @@ fn test_format_date_fallback() {
         enum_values: None,
         const_value: None,
         format: Some("date".to_string()),
+        pattern: None,
+        pattern_prefix: None,
+        pattern_suffix: None,
     };
 
     let invalid_date = "not-a-date";
@@ -85,6 +91,9 @@ fn test_format_date_empty() {
         enum_values: None,
         const_value: None,
         format: Some("date".to_string()),
+        pattern: None,
+        pattern_prefix: None,
+        pattern_suffix: None,
     };
 
     let value = Value::String(Cow::Borrowed(""));

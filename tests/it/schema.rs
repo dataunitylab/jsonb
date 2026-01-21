@@ -21,6 +21,9 @@ fn test_schema_serialization() {
             enum_values: None,
             const_value: None,
             format: None,
+            pattern: None,
+            pattern_prefix: None,
+            pattern_suffix: None,
         },
     );
 
@@ -39,6 +42,9 @@ fn test_schema_serialization() {
         enum_values: None,
         const_value: None,
         format: None,
+        pattern: None,
+        pattern_prefix: None,
+        pattern_suffix: None,
     };
 
     let json = serde_json::to_string(&schema).unwrap();
@@ -83,6 +89,9 @@ fn test_schema_encoding_decoding() {
             enum_values: None,
             const_value: None,
             format: None,
+            pattern: None,
+            pattern_prefix: None,
+            pattern_suffix: None,
         },
     );
     properties.insert(
@@ -99,6 +108,9 @@ fn test_schema_encoding_decoding() {
             enum_values: None,
             const_value: None,
             format: None,
+            pattern: None,
+            pattern_prefix: None,
+            pattern_suffix: None,
         },
     );
 
@@ -118,6 +130,9 @@ fn test_schema_encoding_decoding() {
         enum_values: None,
         const_value: None,
         format: None,
+        pattern: None,
+        pattern_prefix: None,
+        pattern_suffix: None,
     };
 
     // Value: {"a": 10, "b": "hello"}
@@ -151,6 +166,9 @@ fn test_schema_encoding_extra_keys() {
             enum_values: None,
             const_value: None,
             format: None,
+            pattern: None,
+            pattern_prefix: None,
+            pattern_suffix: None,
         },
     );
 
@@ -169,6 +187,9 @@ fn test_schema_encoding_extra_keys() {
         enum_values: None,
         const_value: None,
         format: None,
+        pattern: None,
+        pattern_prefix: None,
+        pattern_suffix: None,
     };
 
     // Value: {"a": 10, "c": true}
@@ -200,6 +221,9 @@ fn test_delta_encoding_integers() {
         enum_values: None,
         const_value: None,
         format: None,
+        pattern: None,
+        pattern_prefix: None,
+        pattern_suffix: None,
     };
 
     let val = 1005; // delta is 5

@@ -18,6 +18,7 @@ const TAG_DATE_TIME_COMPRESSED: u8 = 0x03;
 const TAG_IPV4_COMPRESSED: u8 = 0x04;
 const TAG_IPV6_COMPRESSED: u8 = 0x05;
 const TAG_UUID_COMPRESSED: u8 = 0x06;
+const TAG_PATTERN_COMPRESSED: u8 = 0x07;
 const TAG_STRING_UNCOMPRESSED: u8 = 0x00;
 
 pub fn decode(buf: &[u8], schema: &Schema) -> Value<'static> {
@@ -295,6 +296,21 @@ fn decode_typed_value(
                         let u = uuid::Uuid::from_bytes(bytes.try_into().unwrap());
                         return Value::String(Cow::Owned(u.to_string()));
                     }
+                }
+            } else if schema.pattern_prefix.is_some() || schema.pattern_suffix.is_some() {
+                let tag = read_byte(cursor);
+                if tag == TAG_PATTERN_COMPRESSED {
+                    let len = read_uvarint(cursor) as usize;
+                    let s_bytes = read_bytes(cursor, len);
+                    let mut s = String::from_utf8_lossy(s_bytes).into_owned();
+
+                    if let Some(prefix) = &schema.pattern_prefix {
+                        s.insert_str(0, prefix);
+                    }
+                    if let Some(suffix) = &schema.pattern_suffix {
+                        s.push_str(suffix);
+                    }
+                    return Value::String(Cow::Owned(s));
                 }
             }
             let len = read_uvarint(cursor) as usize;

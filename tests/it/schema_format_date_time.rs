@@ -16,6 +16,9 @@ fn test_format_date_time_compression_z() {
         enum_values: None,
         const_value: None,
         format: Some("date-time".to_string()),
+        pattern: None,
+        pattern_prefix: None,
+        pattern_suffix: None,
     };
 
     let dt_str = "2023-10-25T20:20:39Z";
@@ -64,6 +67,9 @@ fn test_format_date_time_compression_offset() {
         enum_values: None,
         const_value: None,
         format: Some("date-time".to_string()),
+        pattern: None,
+        pattern_prefix: None,
+        pattern_suffix: None,
     };
 
     let dt_str = "2023-10-25T20:20:39.4+03:30";
@@ -113,6 +119,9 @@ fn test_format_date_time_fallback() {
         enum_values: None,
         const_value: None,
         format: Some("date-time".to_string()),
+        pattern: None,
+        pattern_prefix: None,
+        pattern_suffix: None,
     };
 
     let invalid_dt = "not-a-datetime";

@@ -16,6 +16,9 @@ fn test_format_ipv4_compression() {
         enum_values: None,
         const_value: None,
         format: Some("ipv4".to_string()),
+        pattern: None,
+        pattern_prefix: None,
+        pattern_suffix: None,
     };
 
     let ip_str = "192.168.1.1";
@@ -50,6 +53,9 @@ fn test_format_ipv4_fallback() {
         enum_values: None,
         const_value: None,
         format: Some("ipv4".to_string()),
+        pattern: None,
+        pattern_prefix: None,
+        pattern_suffix: None,
     };
 
     let invalid_ip = "999.999.999.999";

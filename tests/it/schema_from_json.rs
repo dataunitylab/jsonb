@@ -30,6 +30,9 @@ fn test_from_json_boolean() {
             enum_values: None,
             const_value: None,
             format: None,
+            pattern: None,
+            pattern_prefix: None,
+            pattern_suffix: None,
         }
     );
 

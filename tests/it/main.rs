@@ -33,4 +33,5 @@ mod schema_from_json_format;
 mod schema_from_json_ignored;
 mod schema_multi;
 mod schema_multiple_of;
+mod schema_pattern;
 mod schema_prefix_items;

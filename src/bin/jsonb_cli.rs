@@ -70,6 +70,9 @@ fn main() -> anyhow::Result<()> {
                 enum_values: None,
                 const_value: None,
                 format: None,
+                pattern: None,
+                pattern_prefix: None,
+                pattern_suffix: None,
             };
             encode(&value, &empty_schema, &mut buf);
         }

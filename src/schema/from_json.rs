@@ -21,6 +21,9 @@ pub fn from_serde_json(json: &Value) -> Result<Schema> {
                     enum_values: None,
                     const_value: None,
                     format: None,
+                    pattern: None,
+                    pattern_prefix: None,
+                    pattern_suffix: None,
                 })
             } else {
                 // Schema: false (always invalid) -> enum: []
@@ -36,6 +39,9 @@ pub fn from_serde_json(json: &Value) -> Result<Schema> {
                     enum_values: Some(vec![]),
                     const_value: None,
                     format: None,
+                    pattern: None,
+                    pattern_prefix: None,
+                    pattern_suffix: None,
                 })
             }
         }
@@ -52,6 +58,9 @@ pub fn from_serde_json(json: &Value) -> Result<Schema> {
                 enum_values: None,
                 const_value: None,
                 format: None,
+                pattern: None,
+                pattern_prefix: None,
+                pattern_suffix: None,
             };
 
             for (k, v) in map {
@@ -74,6 +83,16 @@ pub fn from_serde_json(json: &Value) -> Result<Schema> {
                             }
                         } else {
                             return Err(Error::Message("format must be a string".to_string()));
+                        }
+                    }
+                    "pattern" => {
+                        if let Value::String(s) = v {
+                            schema.pattern = Some(s.clone());
+                            let (prefix, suffix) = extract_pattern_optimization(s);
+                            schema.pattern_prefix = prefix;
+                            schema.pattern_suffix = suffix;
+                        } else {
+                            return Err(Error::Message("pattern must be a string".to_string()));
                         }
                     }
                     "properties" => {
@@ -225,4 +244,71 @@ fn parse_i128(v: &Value, field: &str) -> Result<i128> {
         }
         _ => Err(Error::Message(format!("{} must be a number", field))),
     }
+}
+
+fn extract_pattern_optimization(s: &str) -> (Option<String>, Option<String>) {
+    let mut prefix = None;
+    let mut suffix = None;
+
+    // Prefix extraction
+    if s.starts_with('^') {
+        let mut p = String::new();
+        let mut chars = s.chars().skip(1); // Skip ^
+        let mut escaped = false;
+        while let Some(c) = chars.next() {
+            if escaped {
+                p.push(c);
+                escaped = false;
+            } else if c == '\\' {
+                escaped = true;
+            } else if "^$.*+?()[]{}|".contains(c) {
+                // Special char, stop
+                break;
+            } else {
+                p.push(c);
+            }
+        }
+        if !p.is_empty() {
+            prefix = Some(p);
+        }
+    }
+
+    // Suffix extraction
+    if s.ends_with('$') {
+        let s_no_anchor = &s[..s.len() - 1];
+        let chars: Vec<char> = s_no_anchor.chars().collect();
+        let mut suf = String::new();
+
+        let mut i = chars.len();
+        while i > 0 {
+            i -= 1;
+            let c = chars[i];
+
+            let is_escaped = if i > 0 && chars[i - 1] == '\\' {
+                let mut backslash_count = 0;
+                let mut j = i;
+                while j > 0 && chars[j - 1] == '\\' {
+                    backslash_count += 1;
+                    j -= 1;
+                }
+                backslash_count % 2 != 0
+            } else {
+                false
+            };
+
+            if is_escaped {
+                suf.insert(0, c);
+                i -= 1; // Consume backslash
+            } else if "^$.*+?()[]{}|".contains(c) {
+                break;
+            } else {
+                suf.insert(0, c);
+            }
+        }
+        if !suf.is_empty() {
+            suffix = Some(suf);
+        }
+    }
+
+    (prefix, suffix)
 }
