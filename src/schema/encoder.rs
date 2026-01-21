@@ -41,8 +41,29 @@ fn encode_value(value: &Value, schema: Option<&Schema>, buf: &mut Vec<u8>) {
                     if types.contains(&InstanceType::Integer)
                         || types.contains(&InstanceType::Number)
                     {
-                        if let Some(min) = schema.minimum {
-                            if let Some(val) = n.as_i128() {
+                        if let Some(val) = n.as_i128() {
+                            if let Some(mul) = schema.multiple_of {
+                                if let Some(min) = schema.minimum {
+                                    if min % mul == 0 {
+                                        if val >= min {
+                                            let delta = (val - min) / mul;
+                                            buf.push(TAG_NUMBER);
+                                            write_uvarint128(buf, delta as u128);
+                                            return;
+                                        }
+                                    } else {
+                                        let res = val / mul;
+                                        buf.push(TAG_NUMBER);
+                                        write_uvarint128(buf, res as u128);
+                                        return;
+                                    }
+                                } else {
+                                    let res = val / mul;
+                                    buf.push(TAG_NUMBER);
+                                    write_uvarint128(buf, res as u128);
+                                    return;
+                                }
+                            } else if let Some(min) = schema.minimum {
                                 if val >= min {
                                     let delta = (val - min) as u128;
                                     buf.push(TAG_NUMBER);
@@ -82,8 +103,26 @@ fn encode_typed_value(
             buf.push(if *b { 1 } else { 0 });
         }
         (InstanceType::Number, Value::Number(n)) | (InstanceType::Integer, Value::Number(n)) => {
-            if let Some(min) = schema.minimum {
-                if let Some(val) = n.as_i128() {
+            if let Some(val) = n.as_i128() {
+                if let Some(mul) = schema.multiple_of {
+                    if let Some(min) = schema.minimum {
+                        if min % mul == 0 {
+                            if val >= min {
+                                let delta = (val - min) / mul;
+                                write_uvarint128(buf, delta as u128);
+                                return;
+                            }
+                        } else {
+                            let res = val / mul;
+                            write_uvarint128(buf, res as u128);
+                            return;
+                        }
+                    } else {
+                        let res = val / mul;
+                        write_uvarint128(buf, res as u128);
+                        return;
+                    }
+                } else if let Some(min) = schema.minimum {
                     if val >= min {
                         let delta = (val - min) as u128;
                         write_uvarint128(buf, delta);

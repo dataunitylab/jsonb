@@ -39,22 +39,41 @@ fn decode_value(cursor: &mut Cursor<&[u8]>, schema: Option<&Schema>) -> Value<'s
                 // Check if it's a number tag and we have delta encoding
                 let pos = cursor.position();
                 let tag = read_byte(cursor);
-                if tag == TAG_NUMBER {
-                    if types.contains(&InstanceType::Integer)
-                        || types.contains(&InstanceType::Number)
-                    {
-                        if let Some(min) = schema.minimum {
-                            // Delta encoding
-                            let delta = read_uvarint128(cursor);
-                            let val = min + delta as i128;
-                            if let Ok(v) = i64::try_from(val) {
-                                return Value::Number(Number::Int64(v));
+                if tag == TAG_NUMBER
+                    && (types.contains(&InstanceType::Integer)
+                        || types.contains(&InstanceType::Number))
+                {
+                    if let Some(mul) = schema.multiple_of {
+                        let val = if let Some(min) = schema.minimum {
+                            if min % mul == 0 {
+                                let delta = read_uvarint128(cursor);
+                                (delta as i128) * mul + min
+                            } else {
+                                let res = read_uvarint128(cursor);
+                                (res as i128) * mul
                             }
-                            return Value::Number(Number::Decimal128(crate::Decimal128 {
-                                scale: 0,
-                                value: val,
-                            }));
+                        } else {
+                            let res = read_uvarint128(cursor);
+                            (res as i128) * mul
+                        };
+                        if let Ok(v) = i64::try_from(val) {
+                            return Value::Number(Number::Int64(v));
                         }
+                        return Value::Number(Number::Decimal128(crate::Decimal128 {
+                            scale: 0,
+                            value: val,
+                        }));
+                    } else if let Some(min) = schema.minimum {
+                        // Delta encoding
+                        let delta = read_uvarint128(cursor);
+                        let val = min + delta as i128;
+                        if let Ok(v) = i64::try_from(val) {
+                            return Value::Number(Number::Int64(v));
+                        }
+                        return Value::Number(Number::Decimal128(crate::Decimal128 {
+                            scale: 0,
+                            value: val,
+                        }));
                     }
                 }
                 // Reset cursor
@@ -114,7 +133,27 @@ fn decode_typed_value(
             Value::Bool(b)
         }
         InstanceType::Number | InstanceType::Integer => {
-            if let Some(min) = schema.minimum {
+            if let Some(mul) = schema.multiple_of {
+                let val = if let Some(min) = schema.minimum {
+                    if min % mul == 0 {
+                        let delta = read_uvarint128(cursor);
+                        (delta as i128) * mul + min
+                    } else {
+                        let res = read_uvarint128(cursor);
+                        (res as i128) * mul
+                    }
+                } else {
+                    let res = read_uvarint128(cursor);
+                    (res as i128) * mul
+                };
+                if let Ok(v) = i64::try_from(val) {
+                    return Value::Number(Number::Int64(v));
+                }
+                return Value::Number(Number::Decimal128(crate::Decimal128 {
+                    scale: 0,
+                    value: val,
+                }));
+            } else if let Some(min) = schema.minimum {
                 let delta = read_uvarint128(cursor);
                 // Convert u128 delta to i128 to add to min (i128)
                 let val = min + delta as i128;

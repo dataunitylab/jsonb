@@ -32,6 +32,7 @@ fn test_multi_type_encoding_decoding() {
         required: None,
         minimum: Some(1000),
         maximum: None,
+        multiple_of: None,
         enum_values: None,
         const_value: None,
     };

@@ -22,3 +22,4 @@ mod parser;
 mod schema;
 mod schema_enum_const;
 mod schema_multi;
+mod schema_multiple_of;

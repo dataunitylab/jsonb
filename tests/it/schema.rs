@@ -15,6 +15,7 @@ fn test_schema_serialization() {
             required: None,
             minimum: None,
             maximum: None,
+            multiple_of: None,
             enum_values: None,
             const_value: None,
         },
@@ -29,6 +30,7 @@ fn test_schema_serialization() {
         required: Some(required),
         minimum: None,
         maximum: None,
+        multiple_of: None,
         enum_values: None,
         const_value: None,
     };
@@ -69,6 +71,7 @@ fn test_schema_encoding_decoding() {
             required: None,
             minimum: None,
             maximum: None,
+            multiple_of: None,
             enum_values: None,
             const_value: None,
         },
@@ -81,6 +84,7 @@ fn test_schema_encoding_decoding() {
             required: None,
             minimum: None,
             maximum: None,
+            multiple_of: None,
             enum_values: None,
             const_value: None,
         },
@@ -96,6 +100,7 @@ fn test_schema_encoding_decoding() {
         required: Some(required),
         minimum: None,
         maximum: None,
+        multiple_of: None,
         enum_values: None,
         const_value: None,
     };
@@ -125,6 +130,7 @@ fn test_schema_encoding_extra_keys() {
             required: None,
             minimum: None,
             maximum: None,
+            multiple_of: None,
             enum_values: None,
             const_value: None,
         },
@@ -139,6 +145,7 @@ fn test_schema_encoding_extra_keys() {
         required: Some(required),
         minimum: None,
         maximum: None,
+        multiple_of: None,
         enum_values: None,
         const_value: None,
     };
@@ -166,6 +173,7 @@ fn test_delta_encoding_integers() {
         required: None,
         minimum: Some(min_val),
         maximum: None,
+        multiple_of: None,
         enum_values: None,
         const_value: None,
     };
