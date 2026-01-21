@@ -61,7 +61,12 @@ pub fn from_serde_json(json: &Value) -> Result<Schema> {
                     }
                     "format" => {
                         if let Value::String(s) = v {
-                            if s == "date" || s == "time" || s == "date-time" {
+                            if s == "date"
+                                || s == "time"
+                                || s == "date-time"
+                                || s == "ipv4"
+                                || s == "ipv6"
+                            {
                                 schema.format = Some(s.clone());
                             } else {
                                 return Err(Error::Message(format!("Unsupported format: {}", s)));

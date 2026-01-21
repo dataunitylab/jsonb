@@ -15,6 +15,8 @@ const TAG_OPTIMIZED_NUMBER: u8 = 0xFF;
 const TAG_DATE_COMPRESSED: u8 = 0x01;
 const TAG_TIME_COMPRESSED: u8 = 0x02;
 const TAG_DATE_TIME_COMPRESSED: u8 = 0x03;
+const TAG_IPV4_COMPRESSED: u8 = 0x04;
+const TAG_IPV6_COMPRESSED: u8 = 0x05;
 const TAG_STRING_UNCOMPRESSED: u8 = 0x00;
 
 pub fn decode(buf: &[u8], schema: &Schema) -> Value<'static> {
@@ -265,6 +267,25 @@ fn decode_typed_value(
 
                         let res = format!("{:04}-{:02}-{:02}T{}{}", y, m, d, time_str, offset_str);
                         return Value::String(Cow::Owned(res));
+                    }
+                } else if format == "ipv4" {
+                    let tag = read_byte(cursor);
+                    if tag == TAG_IPV4_COMPRESSED {
+                        let octets = read_bytes(cursor, 4);
+                        let res =
+                            format!("{}.{}.{}.{}", octets[0], octets[1], octets[2], octets[3]);
+                        return Value::String(Cow::Owned(res));
+                    }
+                } else if format == "ipv6" {
+                    let tag = read_byte(cursor);
+                    if tag == TAG_IPV6_COMPRESSED {
+                        let octets = read_bytes(cursor, 16);
+                        let addr = std::net::Ipv6Addr::from([
+                            octets[0], octets[1], octets[2], octets[3], octets[4], octets[5],
+                            octets[6], octets[7], octets[8], octets[9], octets[10], octets[11],
+                            octets[12], octets[13], octets[14], octets[15],
+                        ]);
+                        return Value::String(Cow::Owned(addr.to_string()));
                     }
                 }
             }

@@ -24,6 +24,8 @@ mod schema_dollar_schema;
 mod schema_enum_const;
 mod schema_format_date;
 mod schema_format_date_time;
+mod schema_format_ipv4;
+mod schema_format_ipv6;
 mod schema_format_time;
 mod schema_from_json;
 mod schema_from_json_format;
