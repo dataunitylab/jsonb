@@ -12,6 +12,8 @@ const TAG_STRING: u8 = 0x04;
 const TAG_ARRAY: u8 = 0x05;
 const TAG_OBJECT: u8 = 0x06;
 const TAG_OPTIMIZED_NUMBER: u8 = 0xFF;
+const TAG_DATE_COMPRESSED: u8 = 0x01;
+const TAG_STRING_UNCOMPRESSED: u8 = 0x00;
 
 pub fn decode(buf: &[u8], schema: &Schema) -> Value<'static> {
     let mut cursor = Cursor::new(buf);
@@ -186,6 +188,20 @@ fn decode_typed_value(
             Value::Number(n)
         }
         InstanceType::String => {
+            if let Some(format) = &schema.format {
+                if format == "date" {
+                    let tag = read_byte(cursor);
+                    if tag == TAG_DATE_COMPRESSED {
+                        let y_bytes = read_bytes(cursor, 2);
+                        let y = u16::from_be_bytes(y_bytes.try_into().unwrap());
+                        let m = read_byte(cursor);
+                        let d = read_byte(cursor);
+                        let s = format!("{:04}-{:02}-{:02}", y, m, d);
+                        return Value::String(Cow::Owned(s));
+                    }
+                    // If TAG_STRING_UNCOMPRESSED (0x00), just consume it and proceed
+                }
+            }
             let len = read_uvarint(cursor) as usize;
             let s = read_bytes(cursor, len);
             let s_str = String::from_utf8_lossy(s).into_owned();

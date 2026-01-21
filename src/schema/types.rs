@@ -19,6 +19,8 @@ pub struct Schema {
     pub prefix_items: Option<Vec<Schema>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub items: Option<Box<Schema>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub format: Option<String>,
     #[serde(rename = "enum", skip_serializing_if = "Option::is_none")]
     pub enum_values: Option<Vec<serde_json::Value>>,
     #[serde(rename = "const", skip_serializing_if = "Option::is_none")]

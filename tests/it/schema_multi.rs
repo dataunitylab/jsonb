@@ -36,6 +36,7 @@ fn test_multi_type_encoding_decoding() {
         items: None,
         enum_values: None,
         const_value: None,
+        format: None,
     };
 
     // Case 1: Integer (should be delta encoded if we implement it, or at least round-trip)

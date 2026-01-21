@@ -17,6 +17,7 @@ fn test_multiple_of_optimization() {
         items: None,
         enum_values: None,
         const_value: None,
+        format: None,
     };
 
     let val = 9;
@@ -54,6 +55,7 @@ fn test_multiple_of_with_aligned_minimum() {
         items: None,
         enum_values: None,
         const_value: None,
+        format: None,
     };
 
     // val = 20.
@@ -94,6 +96,7 @@ fn test_multiple_of_with_unaligned_minimum() {
         items: None,
         enum_values: None,
         const_value: None,
+        format: None,
     };
 
     // val = 20.
@@ -136,6 +139,7 @@ fn test_multiple_of_union() {
         items: None,
         enum_values: None,
         const_value: None,
+        format: None,
     };
 
     // val = 8.
@@ -178,6 +182,7 @@ fn test_multiple_of_float() {
         items: None,
         enum_values: None,
         const_value: None,
+        format: None,
     };
 
     let val = 4.0;
@@ -215,6 +220,7 @@ fn test_multiple_of_float_unoptimized() {
         items: None,
         enum_values: None,
         const_value: None,
+        format: None,
     };
 
     let val = 4.5;
@@ -251,6 +257,7 @@ fn test_multiple_of_decimal() {
         items: None,
         enum_values: None,
         const_value: None,
+        format: None,
     };
 
     // 4.0 as Decimal64 with scale 1 -> value 40, scale 1.

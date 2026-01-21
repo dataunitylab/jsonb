@@ -20,6 +20,7 @@ fn test_schema_serialization() {
             items: None,
             enum_values: None,
             const_value: None,
+            format: None,
         },
     );
 
@@ -37,6 +38,7 @@ fn test_schema_serialization() {
         items: None,
         enum_values: None,
         const_value: None,
+        format: None,
     };
 
     let json = serde_json::to_string(&schema).unwrap();
@@ -80,6 +82,7 @@ fn test_schema_encoding_decoding() {
             items: None,
             enum_values: None,
             const_value: None,
+            format: None,
         },
     );
     properties.insert(
@@ -95,6 +98,7 @@ fn test_schema_encoding_decoding() {
             items: None,
             enum_values: None,
             const_value: None,
+            format: None,
         },
     );
 
@@ -113,6 +117,7 @@ fn test_schema_encoding_decoding() {
         items: None,
         enum_values: None,
         const_value: None,
+        format: None,
     };
 
     // Value: {"a": 10, "b": "hello"}
@@ -145,6 +150,7 @@ fn test_schema_encoding_extra_keys() {
             items: None,
             enum_values: None,
             const_value: None,
+            format: None,
         },
     );
 
@@ -162,6 +168,7 @@ fn test_schema_encoding_extra_keys() {
         items: None,
         enum_values: None,
         const_value: None,
+        format: None,
     };
 
     // Value: {"a": 10, "c": true}
@@ -192,6 +199,7 @@ fn test_delta_encoding_integers() {
         items: None,
         enum_values: None,
         const_value: None,
+        format: None,
     };
 
     let val = 1005; // delta is 5

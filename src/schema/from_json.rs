@@ -20,6 +20,7 @@ pub fn from_serde_json(json: &Value) -> Result<Schema> {
                     items: None,
                     enum_values: None,
                     const_value: None,
+                    format: None,
                 })
             } else {
                 // Schema: false (always invalid) -> enum: []
@@ -34,6 +35,7 @@ pub fn from_serde_json(json: &Value) -> Result<Schema> {
                     items: None,
                     enum_values: Some(vec![]),
                     const_value: None,
+                    format: None,
                 })
             }
         }
@@ -49,12 +51,24 @@ pub fn from_serde_json(json: &Value) -> Result<Schema> {
                 items: None,
                 enum_values: None,
                 const_value: None,
+                format: None,
             };
 
             for (k, v) in map {
                 match k.as_str() {
                     "type" => {
                         schema.instance_type = Some(parse_type(v)?);
+                    }
+                    "format" => {
+                        if let Value::String(s) = v {
+                            if s == "date" {
+                                schema.format = Some(s.clone());
+                            } else {
+                                return Err(Error::Message(format!("Unsupported format: {}", s)));
+                            }
+                        } else {
+                            return Err(Error::Message("format must be a string".to_string()));
+                        }
                     }
                     "properties" => {
                         if let Value::Object(props) = v {

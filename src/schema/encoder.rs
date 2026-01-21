@@ -11,8 +11,11 @@ const TAG_STRING: u8 = 0x04;
 const TAG_ARRAY: u8 = 0x05;
 const TAG_OBJECT: u8 = 0x06;
 const TAG_OPTIMIZED_NUMBER: u8 = 0xFF;
+const TAG_DATE_COMPRESSED: u8 = 0x01;
+const TAG_STRING_UNCOMPRESSED: u8 = 0x00;
 
 use crate::from_raw_jsonb;
+use jiff::civil::Date; // Ensure jiff is available
 
 pub fn encode(value: &Value, schema: &Schema, buf: &mut Vec<u8>) {
     encode_value(value, Some(schema), buf);
@@ -157,6 +160,23 @@ fn encode_typed_value(
             buf.extend_from_slice(&temp);
         }
         (InstanceType::String, Value::String(s)) => {
+            if let Some(format) = &schema.format {
+                if format == "date" {
+                    if let Ok(date) = s.parse::<Date>() {
+                        let y = date.year();
+                        let m = date.month();
+                        let d = date.day();
+                        if y >= 0 && y <= 9999 {
+                            buf.push(TAG_DATE_COMPRESSED);
+                            buf.extend_from_slice(&(y as u16).to_be_bytes());
+                            buf.push(m as u8);
+                            buf.push(d as u8);
+                            return;
+                        }
+                    }
+                    buf.push(TAG_STRING_UNCOMPRESSED);
+                }
+            }
             write_uvarint(buf, s.len() as u64);
             buf.extend_from_slice(s.as_bytes());
         }

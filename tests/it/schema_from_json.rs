@@ -29,6 +29,7 @@ fn test_from_json_boolean() {
             items: None,
             enum_values: None,
             const_value: None,
+            format: None,
         }
     );
 

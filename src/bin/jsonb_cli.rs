@@ -69,6 +69,7 @@ fn main() -> anyhow::Result<()> {
                 items: None,
                 enum_values: None,
                 const_value: None,
+                format: None,
             };
             encode(&value, &empty_schema, &mut buf);
         }
