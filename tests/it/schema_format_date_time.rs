@@ -6,19 +6,8 @@ use std::borrow::Cow;
 fn test_format_date_time_compression_z() {
     let schema = Schema {
         instance_type: Some(SingleOrVec::Single(InstanceType::String)),
-        properties: None,
-        required: None,
-        minimum: None,
-        maximum: None,
-        multiple_of: None,
-        prefix_items: None,
-        items: None,
-        enum_values: None,
-        const_value: None,
         format: Some("date-time".to_string()),
-        pattern: None,
-        pattern_prefix: None,
-        pattern_suffix: None,
+        ..Schema::default()
     };
 
     let dt_str = "2023-10-25T20:20:39Z";
@@ -57,19 +46,8 @@ fn test_format_date_time_compression_z() {
 fn test_format_date_time_compression_offset() {
     let schema = Schema {
         instance_type: Some(SingleOrVec::Single(InstanceType::String)),
-        properties: None,
-        required: None,
-        minimum: None,
-        maximum: None,
-        multiple_of: None,
-        prefix_items: None,
-        items: None,
-        enum_values: None,
-        const_value: None,
         format: Some("date-time".to_string()),
-        pattern: None,
-        pattern_prefix: None,
-        pattern_suffix: None,
+        ..Schema::default()
     };
 
     let dt_str = "2023-10-25T20:20:39.4+03:30";
@@ -109,19 +87,8 @@ fn test_format_date_time_compression_offset() {
 fn test_format_date_time_fallback() {
     let schema = Schema {
         instance_type: Some(SingleOrVec::Single(InstanceType::String)),
-        properties: None,
-        required: None,
-        minimum: None,
-        maximum: None,
-        multiple_of: None,
-        prefix_items: None,
-        items: None,
-        enum_values: None,
-        const_value: None,
         format: Some("date-time".to_string()),
-        pattern: None,
-        pattern_prefix: None,
-        pattern_suffix: None,
+        ..Schema::default()
     };
 
     let invalid_dt = "not-a-datetime";

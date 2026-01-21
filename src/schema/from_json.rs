@@ -9,59 +9,17 @@ pub fn from_serde_json(json: &Value) -> Result<Schema> {
         Value::Bool(b) => {
             if *b {
                 // Schema: true (always valid) -> Empty Schema
-                Ok(Schema {
-                    instance_type: None,
-                    properties: None,
-                    required: None,
-                    minimum: None,
-                    maximum: None,
-                    multiple_of: None,
-                    prefix_items: None,
-                    items: None,
-                    enum_values: None,
-                    const_value: None,
-                    format: None,
-                    pattern: None,
-                    pattern_prefix: None,
-                    pattern_suffix: None,
-                })
+                Ok(Schema::default())
             } else {
                 // Schema: false (always invalid) -> enum: []
                 Ok(Schema {
-                    instance_type: None,
-                    properties: None,
-                    required: None,
-                    minimum: None,
-                    maximum: None,
-                    multiple_of: None,
-                    prefix_items: None,
-                    items: None,
                     enum_values: Some(vec![]),
-                    const_value: None,
-                    format: None,
-                    pattern: None,
-                    pattern_prefix: None,
-                    pattern_suffix: None,
+                    ..Schema::default()
                 })
             }
         }
         Value::Object(map) => {
-            let mut schema = Schema {
-                instance_type: None,
-                properties: None,
-                required: None,
-                minimum: None,
-                maximum: None,
-                multiple_of: None,
-                prefix_items: None,
-                items: None,
-                enum_values: None,
-                const_value: None,
-                format: None,
-                pattern: None,
-                pattern_prefix: None,
-                pattern_suffix: None,
-            };
+            let mut schema = Schema::default();
 
             for (k, v) in map {
                 match k.as_str() {

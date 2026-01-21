@@ -58,22 +58,7 @@ fn main() -> anyhow::Result<()> {
             // If no schema, encode with empty/default schema logic or standard encoding?
             // The prompt says "jsonb or jsonb_schema encoded".
             // We can use an empty schema which falls back to untyped encoding.
-            let empty_schema = Schema {
-                instance_type: None,
-                properties: None,
-                required: None,
-                minimum: None,
-                maximum: None,
-                multiple_of: None,
-                prefix_items: None,
-                items: None,
-                enum_values: None,
-                const_value: None,
-                format: None,
-                pattern: None,
-                pattern_prefix: None,
-                pattern_suffix: None,
-            };
+            let empty_schema = Schema::default();
             encode(&value, &empty_schema, &mut buf);
         }
 

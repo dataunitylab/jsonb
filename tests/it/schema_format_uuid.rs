@@ -6,19 +6,8 @@ use std::borrow::Cow;
 fn test_format_uuid_compression() {
     let schema = Schema {
         instance_type: Some(SingleOrVec::Single(InstanceType::String)),
-        properties: None,
-        required: None,
-        minimum: None,
-        maximum: None,
-        multiple_of: None,
-        prefix_items: None,
-        items: None,
-        enum_values: None,
-        const_value: None,
         format: Some("uuid".to_string()),
-        pattern: None,
-        pattern_prefix: None,
-        pattern_suffix: None,
+        ..Schema::default()
     };
 
     let uuid_str = "123e4567-e89b-12d3-a456-426614174000";
@@ -45,19 +34,8 @@ fn test_format_uuid_compression() {
 fn test_format_uuid_fallback() {
     let schema = Schema {
         instance_type: Some(SingleOrVec::Single(InstanceType::String)),
-        properties: None,
-        required: None,
-        minimum: None,
-        maximum: None,
-        multiple_of: None,
-        prefix_items: None,
-        items: None,
-        enum_values: None,
-        const_value: None,
         format: Some("uuid".to_string()),
-        pattern: None,
-        pattern_prefix: None,
-        pattern_suffix: None,
+        ..Schema::default()
     };
 
     let invalid_uuid = "not-a-uuid";

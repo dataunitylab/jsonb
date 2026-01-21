@@ -30,16 +30,7 @@ fn test_multi_type_encoding_decoding() {
         properties: None,
         required: None,
         minimum: Some(1000),
-        maximum: None,
-        multiple_of: None,
-        prefix_items: None,
-        items: None,
-        enum_values: None,
-        const_value: None,
-        format: None,
-        pattern: None,
-        pattern_prefix: None,
-        pattern_suffix: None,
+        ..Schema::default()
     };
 
     // Case 1: Integer (should be delta encoded if we implement it, or at least round-trip)

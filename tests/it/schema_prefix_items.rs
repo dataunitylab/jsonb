@@ -23,11 +23,7 @@ fn test_prefix_items_optimization() {
             prefix_items: None,
             items: None,
             enum_values: None,
-            const_value: None,
-            format: None,
-            pattern: None,
-            pattern_prefix: None,
-            pattern_suffix: None,
+            ..Schema::default()
         },
         Schema {
             instance_type: Some(SingleOrVec::Single(InstanceType::String)),
@@ -39,11 +35,7 @@ fn test_prefix_items_optimization() {
             prefix_items: None,
             items: None,
             enum_values: None,
-            const_value: None,
-            format: None,
-            pattern: None,
-            pattern_prefix: None,
-            pattern_suffix: None,
+            ..Schema::default()
         },
     ];
 
@@ -57,11 +49,7 @@ fn test_prefix_items_optimization() {
         prefix_items: Some(prefix_items),
         items: None,
         enum_values: None,
-        const_value: None,
-        format: None,
-        pattern: None,
-        pattern_prefix: None,
-        pattern_suffix: None,
+        ..Schema::default()
     };
 
     // Value: [10, "hello", true]
@@ -134,11 +122,7 @@ fn test_items_optimization() {
         prefix_items: None,
         items: None,
         enum_values: None,
-        const_value: None,
-        format: None,
-        pattern: None,
-        pattern_prefix: None,
-        pattern_suffix: None,
+        ..Schema::default()
     };
 
     let schema = Schema {
@@ -151,11 +135,7 @@ fn test_items_optimization() {
         prefix_items: None,
         items: Some(Box::new(items_schema)),
         enum_values: None,
-        const_value: None,
-        format: None,
-        pattern: None,
-        pattern_prefix: None,
-        pattern_suffix: None,
+        ..Schema::default()
     };
 
     // Value: [10, 20]
@@ -195,11 +175,7 @@ fn test_prefix_items_and_items_optimization() {
         prefix_items: None,
         items: None,
         enum_values: None,
-        const_value: None,
-        format: None,
-        pattern: None,
-        pattern_prefix: None,
-        pattern_suffix: None,
+        ..Schema::default()
     }];
 
     let items_schema = Schema {
@@ -212,11 +188,7 @@ fn test_prefix_items_and_items_optimization() {
         prefix_items: None,
         items: None,
         enum_values: None,
-        const_value: None,
-        format: None,
-        pattern: None,
-        pattern_prefix: None,
-        pattern_suffix: None,
+        ..Schema::default()
     };
 
     let schema = Schema {
@@ -229,11 +201,7 @@ fn test_prefix_items_and_items_optimization() {
         prefix_items: Some(prefix_items),
         items: Some(Box::new(items_schema)),
         enum_values: None,
-        const_value: None,
-        format: None,
-        pattern: None,
-        pattern_prefix: None,
-        pattern_suffix: None,
+        ..Schema::default()
     };
 
     // Value: ["start", 10, 20]

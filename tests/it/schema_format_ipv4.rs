@@ -6,19 +6,8 @@ use std::borrow::Cow;
 fn test_format_ipv4_compression() {
     let schema = Schema {
         instance_type: Some(SingleOrVec::Single(InstanceType::String)),
-        properties: None,
-        required: None,
-        minimum: None,
-        maximum: None,
-        multiple_of: None,
-        prefix_items: None,
-        items: None,
-        enum_values: None,
-        const_value: None,
         format: Some("ipv4".to_string()),
-        pattern: None,
-        pattern_prefix: None,
-        pattern_suffix: None,
+        ..Schema::default()
     };
 
     let ip_str = "192.168.1.1";
@@ -43,19 +32,8 @@ fn test_format_ipv4_compression() {
 fn test_format_ipv4_fallback() {
     let schema = Schema {
         instance_type: Some(SingleOrVec::Single(InstanceType::String)),
-        properties: None,
-        required: None,
-        minimum: None,
-        maximum: None,
-        multiple_of: None,
-        prefix_items: None,
-        items: None,
-        enum_values: None,
-        const_value: None,
         format: Some("ipv4".to_string()),
-        pattern: None,
-        pattern_prefix: None,
-        pattern_suffix: None,
+        ..Schema::default()
     };
 
     let invalid_ip = "999.999.999.999";

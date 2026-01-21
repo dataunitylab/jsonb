@@ -6,19 +6,8 @@ use std::borrow::Cow;
 fn test_format_ipv6_compression() {
     let schema = Schema {
         instance_type: Some(SingleOrVec::Single(InstanceType::String)),
-        properties: None,
-        required: None,
-        minimum: None,
-        maximum: None,
-        multiple_of: None,
-        prefix_items: None,
-        items: None,
-        enum_values: None,
-        const_value: None,
         format: Some("ipv6".to_string()),
-        pattern: None,
-        pattern_prefix: None,
-        pattern_suffix: None,
+        ..Schema::default()
     };
 
     let ip_str = "2001:db8::1";
@@ -48,19 +37,8 @@ fn test_format_ipv6_compression() {
 fn test_format_ipv6_fallback() {
     let schema = Schema {
         instance_type: Some(SingleOrVec::Single(InstanceType::String)),
-        properties: None,
-        required: None,
-        minimum: None,
-        maximum: None,
-        multiple_of: None,
-        prefix_items: None,
-        items: None,
-        enum_values: None,
-        const_value: None,
         format: Some("ipv6".to_string()),
-        pattern: None,
-        pattern_prefix: None,
-        pattern_suffix: None,
+        ..Schema::default()
     };
 
     let invalid_ip = "not-an-ipv6-address";

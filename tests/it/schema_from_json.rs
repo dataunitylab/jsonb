@@ -16,25 +16,7 @@ fn test_from_json_basic() {
 #[test]
 fn test_from_json_boolean() {
     let true_schema = from_serde_json(&json!(true)).unwrap();
-    assert_eq!(
-        true_schema,
-        Schema {
-            instance_type: None,
-            properties: None,
-            required: None,
-            minimum: None,
-            maximum: None,
-            multiple_of: None,
-            prefix_items: None,
-            items: None,
-            enum_values: None,
-            const_value: None,
-            format: None,
-            pattern: None,
-            pattern_prefix: None,
-            pattern_suffix: None,
-        }
-    );
+    assert_eq!(true_schema, Schema::default());
 
     let false_schema = from_serde_json(&json!(false)).unwrap();
     assert!(false_schema.enum_values.is_some());

@@ -6,19 +6,8 @@ use std::borrow::Cow;
 fn test_format_date_compression() {
     let schema = Schema {
         instance_type: Some(SingleOrVec::Single(InstanceType::String)),
-        properties: None,
-        required: None,
-        minimum: None,
-        maximum: None,
-        multiple_of: None,
-        prefix_items: None,
-        items: None,
-        enum_values: None,
-        const_value: None,
         format: Some("date".to_string()),
-        pattern: None,
-        pattern_prefix: None,
-        pattern_suffix: None,
+        ..Schema::default()
     };
 
     let date_str = "2023-10-25";
@@ -45,19 +34,8 @@ fn test_format_date_compression() {
 fn test_format_date_fallback() {
     let schema = Schema {
         instance_type: Some(SingleOrVec::Single(InstanceType::String)),
-        properties: None,
-        required: None,
-        minimum: None,
-        maximum: None,
-        multiple_of: None,
-        prefix_items: None,
-        items: None,
-        enum_values: None,
-        const_value: None,
         format: Some("date".to_string()),
-        pattern: None,
-        pattern_prefix: None,
-        pattern_suffix: None,
+        ..Schema::default()
     };
 
     let invalid_date = "not-a-date";
@@ -81,19 +59,8 @@ fn test_format_date_fallback() {
 fn test_format_date_empty() {
     let schema = Schema {
         instance_type: Some(SingleOrVec::Single(InstanceType::String)),
-        properties: None,
-        required: None,
-        minimum: None,
-        maximum: None,
-        multiple_of: None,
-        prefix_items: None,
-        items: None,
-        enum_values: None,
-        const_value: None,
         format: Some("date".to_string()),
-        pattern: None,
-        pattern_prefix: None,
-        pattern_suffix: None,
+        ..Schema::default()
     };
 
     let value = Value::String(Cow::Borrowed(""));

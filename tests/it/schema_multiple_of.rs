@@ -13,14 +13,7 @@ fn test_multiple_of_optimization() {
         minimum: None,
         maximum: None,
         multiple_of: Some(multiple),
-        prefix_items: None,
-        items: None,
-        enum_values: None,
-        const_value: None,
-        format: None,
-        pattern: None,
-        pattern_prefix: None,
-        pattern_suffix: None,
+        ..Schema::default()
     };
 
     let val = 9;
@@ -54,14 +47,7 @@ fn test_multiple_of_with_aligned_minimum() {
         minimum: Some(min),
         maximum: None,
         multiple_of: Some(multiple),
-        prefix_items: None,
-        items: None,
-        enum_values: None,
-        const_value: None,
-        format: None,
-        pattern: None,
-        pattern_prefix: None,
-        pattern_suffix: None,
+        ..Schema::default()
     };
 
     // val = 20.
@@ -98,14 +84,7 @@ fn test_multiple_of_with_unaligned_minimum() {
         minimum: Some(min),
         maximum: None,
         multiple_of: Some(multiple),
-        prefix_items: None,
-        items: None,
-        enum_values: None,
-        const_value: None,
-        format: None,
-        pattern: None,
-        pattern_prefix: None,
-        pattern_suffix: None,
+        ..Schema::default()
     };
 
     // val = 20.
@@ -144,14 +123,7 @@ fn test_multiple_of_union() {
         minimum: None,
         maximum: None,
         multiple_of: Some(multiple),
-        prefix_items: None,
-        items: None,
-        enum_values: None,
-        const_value: None,
-        format: None,
-        pattern: None,
-        pattern_prefix: None,
-        pattern_suffix: None,
+        ..Schema::default()
     };
 
     // val = 8.
@@ -190,14 +162,7 @@ fn test_multiple_of_float() {
         minimum: None,
         maximum: None,
         multiple_of: Some(multiple),
-        prefix_items: None,
-        items: None,
-        enum_values: None,
-        const_value: None,
-        format: None,
-        pattern: None,
-        pattern_prefix: None,
-        pattern_suffix: None,
+        ..Schema::default()
     };
 
     let val = 4.0;
@@ -231,14 +196,7 @@ fn test_multiple_of_float_unoptimized() {
         minimum: None,
         maximum: None,
         multiple_of: Some(multiple),
-        prefix_items: None,
-        items: None,
-        enum_values: None,
-        const_value: None,
-        format: None,
-        pattern: None,
-        pattern_prefix: None,
-        pattern_suffix: None,
+        ..Schema::default()
     };
 
     let val = 4.5;
@@ -271,14 +229,7 @@ fn test_multiple_of_decimal() {
         minimum: None,
         maximum: None,
         multiple_of: Some(multiple),
-        prefix_items: None,
-        items: None,
-        enum_values: None,
-        const_value: None,
-        format: None,
-        pattern: None,
-        pattern_prefix: None,
-        pattern_suffix: None,
+        ..Schema::default()
     };
 
     // 4.0 as Decimal64 with scale 1 -> value 40, scale 1.

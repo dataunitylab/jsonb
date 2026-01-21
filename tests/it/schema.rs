@@ -11,19 +11,7 @@ fn test_schema_serialization() {
         "name".to_string(),
         Schema {
             instance_type: Some(SingleOrVec::Single(InstanceType::String)),
-            properties: None,
-            required: None,
-            minimum: None,
-            maximum: None,
-            multiple_of: None,
-            prefix_items: None,
-            items: None,
-            enum_values: None,
-            const_value: None,
-            format: None,
-            pattern: None,
-            pattern_prefix: None,
-            pattern_suffix: None,
+            ..Schema::default()
         },
     );
 
@@ -34,17 +22,7 @@ fn test_schema_serialization() {
         instance_type: Some(SingleOrVec::Single(InstanceType::Object)),
         properties: Some(properties),
         required: Some(required),
-        minimum: None,
-        maximum: None,
-        multiple_of: None,
-        prefix_items: None,
-        items: None,
-        enum_values: None,
-        const_value: None,
-        format: None,
-        pattern: None,
-        pattern_prefix: None,
-        pattern_suffix: None,
+        ..Schema::default()
     };
 
     let json = serde_json::to_string(&schema).unwrap();
@@ -79,38 +57,14 @@ fn test_schema_encoding_decoding() {
         "a".to_string(),
         Schema {
             instance_type: Some(SingleOrVec::Single(InstanceType::Integer)),
-            properties: None,
-            required: None,
-            minimum: None,
-            maximum: None,
-            multiple_of: None,
-            prefix_items: None,
-            items: None,
-            enum_values: None,
-            const_value: None,
-            format: None,
-            pattern: None,
-            pattern_prefix: None,
-            pattern_suffix: None,
+            ..Schema::default()
         },
     );
     properties.insert(
         "b".to_string(),
         Schema {
             instance_type: Some(SingleOrVec::Single(InstanceType::String)),
-            properties: None,
-            required: None,
-            minimum: None,
-            maximum: None,
-            multiple_of: None,
-            prefix_items: None,
-            items: None,
-            enum_values: None,
-            const_value: None,
-            format: None,
-            pattern: None,
-            pattern_prefix: None,
-            pattern_suffix: None,
+            ..Schema::default()
         },
     );
 
@@ -122,17 +76,7 @@ fn test_schema_encoding_decoding() {
         instance_type: Some(SingleOrVec::Single(InstanceType::Object)),
         properties: Some(properties),
         required: Some(required),
-        minimum: None,
-        maximum: None,
-        multiple_of: None,
-        prefix_items: None,
-        items: None,
-        enum_values: None,
-        const_value: None,
-        format: None,
-        pattern: None,
-        pattern_prefix: None,
-        pattern_suffix: None,
+        ..Schema::default()
     };
 
     // Value: {"a": 10, "b": "hello"}
@@ -156,19 +100,7 @@ fn test_schema_encoding_extra_keys() {
         "a".to_string(),
         Schema {
             instance_type: Some(SingleOrVec::Single(InstanceType::Integer)),
-            properties: None,
-            required: None,
-            minimum: None,
-            maximum: None,
-            multiple_of: None,
-            prefix_items: None,
-            items: None,
-            enum_values: None,
-            const_value: None,
-            format: None,
-            pattern: None,
-            pattern_prefix: None,
-            pattern_suffix: None,
+            ..Schema::default()
         },
     );
 
@@ -179,17 +111,7 @@ fn test_schema_encoding_extra_keys() {
         instance_type: Some(SingleOrVec::Single(InstanceType::Object)),
         properties: Some(properties),
         required: Some(required),
-        minimum: None,
-        maximum: None,
-        multiple_of: None,
-        prefix_items: None,
-        items: None,
-        enum_values: None,
-        const_value: None,
-        format: None,
-        pattern: None,
-        pattern_prefix: None,
-        pattern_suffix: None,
+        ..Schema::default()
     };
 
     // Value: {"a": 10, "c": true}
@@ -214,16 +136,7 @@ fn test_delta_encoding_integers() {
         properties: None,
         required: None,
         minimum: Some(min_val),
-        maximum: None,
-        multiple_of: None,
-        prefix_items: None,
-        items: None,
-        enum_values: None,
-        const_value: None,
-        format: None,
-        pattern: None,
-        pattern_prefix: None,
-        pattern_suffix: None,
+        ..Schema::default()
     };
 
     let val = 1005; // delta is 5

@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Schema {
     #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
     pub instance_type: Option<SingleOrVec<InstanceType>>,
