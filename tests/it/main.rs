@@ -23,6 +23,7 @@ mod schema;
 mod schema_dollar_schema;
 mod schema_enum_const;
 mod schema_format_date;
+mod schema_format_time;
 mod schema_from_json;
 mod schema_from_json_format;
 mod schema_from_json_ignored;

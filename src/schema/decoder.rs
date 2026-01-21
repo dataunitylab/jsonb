@@ -13,6 +13,7 @@ const TAG_ARRAY: u8 = 0x05;
 const TAG_OBJECT: u8 = 0x06;
 const TAG_OPTIMIZED_NUMBER: u8 = 0xFF;
 const TAG_DATE_COMPRESSED: u8 = 0x01;
+const TAG_TIME_COMPRESSED: u8 = 0x02;
 const TAG_STRING_UNCOMPRESSED: u8 = 0x00;
 
 pub fn decode(buf: &[u8], schema: &Schema) -> Value<'static> {
@@ -200,6 +201,35 @@ fn decode_typed_value(
                         return Value::String(Cow::Owned(s));
                     }
                     // If TAG_STRING_UNCOMPRESSED (0x00), just consume it and proceed
+                } else if format == "time" {
+                    let tag = read_byte(cursor);
+                    if tag == TAG_TIME_COMPRESSED {
+                        let h = read_byte(cursor);
+                        let m = read_byte(cursor);
+                        let s = read_byte(cursor);
+                        let nano_bytes = read_bytes(cursor, 4);
+                        let nanos = u32::from_be_bytes(nano_bytes.try_into().unwrap());
+                        let sign = read_byte(cursor);
+                        let off_h = read_byte(cursor);
+                        let off_m = read_byte(cursor);
+
+                        let time_str = if nanos == 0 {
+                            format!("{:02}:{:02}:{:02}", h, m, s)
+                        } else {
+                            let ns_str = format!("{:09}", nanos);
+                            let ns_trimmed = ns_str.trim_end_matches('0');
+                            format!("{:02}:{:02}:{:02}.{}", h, m, s, ns_trimmed)
+                        };
+
+                        let offset_str = match sign {
+                            0 => "Z".to_string(),
+                            1 => format!("+{:02}:{:02}", off_h, off_m),
+                            2 => format!("-{:02}:{:02}", off_h, off_m),
+                            _ => String::new(),
+                        };
+
+                        return Value::String(Cow::Owned(format!("{}{}", time_str, offset_str)));
+                    }
                 }
             }
             let len = read_uvarint(cursor) as usize;

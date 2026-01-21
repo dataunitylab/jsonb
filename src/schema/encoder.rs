@@ -12,10 +12,11 @@ const TAG_ARRAY: u8 = 0x05;
 const TAG_OBJECT: u8 = 0x06;
 const TAG_OPTIMIZED_NUMBER: u8 = 0xFF;
 const TAG_DATE_COMPRESSED: u8 = 0x01;
+const TAG_TIME_COMPRESSED: u8 = 0x02;
 const TAG_STRING_UNCOMPRESSED: u8 = 0x00;
 
 use crate::from_raw_jsonb;
-use jiff::civil::Date; // Ensure jiff is available
+use jiff::civil::{Date, Time}; // Ensure jiff is available
 
 pub fn encode(value: &Value, schema: &Schema, buf: &mut Vec<u8>) {
     encode_value(value, Some(schema), buf);
@@ -172,6 +173,56 @@ fn encode_typed_value(
                             buf.push(m as u8);
                             buf.push(d as u8);
                             return;
+                        }
+                    }
+                    buf.push(TAG_STRING_UNCOMPRESSED);
+                } else if format == "time" {
+                    let mut time_part: &str = &s;
+                    let mut sign = 0; // 0=Z, 1=+, 2=-
+                    let mut off_h = 0;
+                    let mut off_m = 0;
+                    let mut valid = false;
+
+                    if s.ends_with('Z') {
+                        time_part = &s[..s.len() - 1];
+                        sign = 0;
+                        valid = true;
+                    } else if s.len() >= 6 {
+                        let sign_char = s.as_bytes()[s.len() - 6];
+                        let colon = s.as_bytes()[s.len() - 3];
+                        if colon == b':' && (sign_char == b'+' || sign_char == b'-') {
+                            time_part = &s[..s.len() - 6];
+                            if sign_char == b'+' {
+                                sign = 1;
+                            } else {
+                                sign = 2;
+                            }
+                            if let (Ok(h), Ok(m)) = (
+                                s[s.len() - 5..s.len() - 3].parse::<u8>(),
+                                s[s.len() - 2..].parse::<u8>(),
+                            ) {
+                                off_h = h;
+                                off_m = m;
+                                valid = true;
+                            }
+                        }
+                    }
+
+                    if valid {
+                        if let Ok(t) = time_part.parse::<Time>() {
+                            if off_h <= 23 && off_m <= 60 {
+                                buf.push(TAG_TIME_COMPRESSED);
+                                buf.push(t.hour() as u8);
+                                buf.push(t.minute() as u8);
+                                buf.push(t.second() as u8);
+                                buf.extend_from_slice(
+                                    &(t.subsec_nanosecond() as u32).to_be_bytes(),
+                                );
+                                buf.push(sign);
+                                buf.push(off_h);
+                                buf.push(off_m);
+                                return;
+                            }
                         }
                     }
                     buf.push(TAG_STRING_UNCOMPRESSED);
