@@ -2,7 +2,6 @@ use jsonb_schema::schema::{decode, encode, InstanceType, Schema, SingleOrVec};
 use jsonb_schema::Number;
 use jsonb_schema::Value;
 use std::borrow::Cow;
-use std::collections::{BTreeMap, BTreeSet};
 
 #[test]
 fn test_schema_multi_type_serialization() {
