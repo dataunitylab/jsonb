@@ -21,6 +21,7 @@ mod number;
 mod parser;
 mod schema;
 mod schema_enum_const;
+mod schema_from_json;
 mod schema_multi;
 mod schema_multiple_of;
 mod schema_prefix_items;
