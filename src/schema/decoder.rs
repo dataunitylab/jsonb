@@ -14,6 +14,7 @@ const TAG_OBJECT: u8 = 0x06;
 const TAG_OPTIMIZED_NUMBER: u8 = 0xFF;
 const TAG_DATE_COMPRESSED: u8 = 0x01;
 const TAG_TIME_COMPRESSED: u8 = 0x02;
+const TAG_DATE_TIME_COMPRESSED: u8 = 0x03;
 const TAG_STRING_UNCOMPRESSED: u8 = 0x00;
 
 pub fn decode(buf: &[u8], schema: &Schema) -> Value<'static> {
@@ -229,6 +230,41 @@ fn decode_typed_value(
                         };
 
                         return Value::String(Cow::Owned(format!("{}{}", time_str, offset_str)));
+                    }
+                } else if format == "date-time" {
+                    let tag = read_byte(cursor);
+                    if tag == TAG_DATE_TIME_COMPRESSED {
+                        let y_bytes = read_bytes(cursor, 2);
+                        let y = u16::from_be_bytes(y_bytes.try_into().unwrap());
+                        let m = read_byte(cursor);
+                        let d = read_byte(cursor);
+
+                        let h = read_byte(cursor);
+                        let min = read_byte(cursor);
+                        let s = read_byte(cursor);
+                        let nano_bytes = read_bytes(cursor, 4);
+                        let nanos = u32::from_be_bytes(nano_bytes.try_into().unwrap());
+                        let sign = read_byte(cursor);
+                        let off_h = read_byte(cursor);
+                        let off_m = read_byte(cursor);
+
+                        let time_str = if nanos == 0 {
+                            format!("{:02}:{:02}:{:02}", h, min, s)
+                        } else {
+                            let ns_str = format!("{:09}", nanos);
+                            let ns_trimmed = ns_str.trim_end_matches('0');
+                            format!("{:02}:{:02}:{:02}.{}", h, min, s, ns_trimmed)
+                        };
+
+                        let offset_str = match sign {
+                            0 => "Z".to_string(),
+                            1 => format!("+{:02}:{:02}", off_h, off_m),
+                            2 => format!("-{:02}:{:02}", off_h, off_m),
+                            _ => String::new(),
+                        };
+
+                        let res = format!("{:04}-{:02}-{:02}T{}{}", y, m, d, time_str, offset_str);
+                        return Value::String(Cow::Owned(res));
                     }
                 }
             }
