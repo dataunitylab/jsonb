@@ -117,6 +117,18 @@ pub fn from_serde_json(json: &Value) -> Result<Schema> {
                     "const" => {
                         schema.const_value = Some(v.clone());
                     }
+                    "title" | "description" | "examples" => {
+                        // Ignore metadata keywords
+                    }
+                    "$schema" => {
+                        if let Value::String(s) = v {
+                            if s != "https://json-schema.org/draft/2020-12/schema" {
+                                return Err(Error::Message(format!("Unsupported $schema: {}", s)));
+                            }
+                        } else {
+                            return Err(Error::Message("$schema must be a string".to_string()));
+                        }
+                    }
                     // Ignored keywords (metadata) could be skipped here if desired,
                     // but prompt implies strictly unsupported.
                     // For safety against strict requirements, I will treat everything else as unsupported.

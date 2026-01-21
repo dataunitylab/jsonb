@@ -38,16 +38,23 @@ fn test_from_json_boolean() {
 }
 
 #[test]
+
 fn test_from_json_unsupported_keyword() {
     let json = json!({
+
         "type": "string",
-        "description": "This is unsupported"
+
+        "unknownKeyword": "This is unsupported"
+
     });
+
     let result = from_serde_json(&json);
+
     assert!(result.is_err());
+
     assert_eq!(
         result.unwrap_err().to_string(),
-        "Unsupported keyword: description"
+        "Unsupported keyword: unknownKeyword"
     );
 }
 
