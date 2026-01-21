@@ -17,6 +17,7 @@ const TAG_TIME_COMPRESSED: u8 = 0x02;
 const TAG_DATE_TIME_COMPRESSED: u8 = 0x03;
 const TAG_IPV4_COMPRESSED: u8 = 0x04;
 const TAG_IPV6_COMPRESSED: u8 = 0x05;
+const TAG_UUID_COMPRESSED: u8 = 0x06;
 const TAG_STRING_UNCOMPRESSED: u8 = 0x00;
 
 pub fn decode(buf: &[u8], schema: &Schema) -> Value<'static> {
@@ -286,6 +287,13 @@ fn decode_typed_value(
                             octets[12], octets[13], octets[14], octets[15],
                         ]);
                         return Value::String(Cow::Owned(addr.to_string()));
+                    }
+                } else if format == "uuid" {
+                    let tag = read_byte(cursor);
+                    if tag == TAG_UUID_COMPRESSED {
+                        let bytes = read_bytes(cursor, 16);
+                        let u = uuid::Uuid::from_bytes(bytes.try_into().unwrap());
+                        return Value::String(Cow::Owned(u.to_string()));
                     }
                 }
             }

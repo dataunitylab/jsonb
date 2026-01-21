@@ -16,6 +16,7 @@ const TAG_TIME_COMPRESSED: u8 = 0x02;
 const TAG_DATE_TIME_COMPRESSED: u8 = 0x03;
 const TAG_IPV4_COMPRESSED: u8 = 0x04;
 const TAG_IPV6_COMPRESSED: u8 = 0x05;
+const TAG_UUID_COMPRESSED: u8 = 0x06;
 const TAG_STRING_UNCOMPRESSED: u8 = 0x00;
 
 use crate::from_raw_jsonb;
@@ -307,6 +308,13 @@ fn encode_typed_value(
                     if let Ok(addr) = s.parse::<std::net::Ipv6Addr>() {
                         buf.push(TAG_IPV6_COMPRESSED);
                         buf.extend_from_slice(&addr.octets());
+                        return;
+                    }
+                    buf.push(TAG_STRING_UNCOMPRESSED);
+                } else if format == "uuid" {
+                    if let Ok(u) = s.parse::<uuid::Uuid>() {
+                        buf.push(TAG_UUID_COMPRESSED);
+                        buf.extend_from_slice(u.as_bytes());
                         return;
                     }
                     buf.push(TAG_STRING_UNCOMPRESSED);

@@ -66,6 +66,7 @@ pub fn from_serde_json(json: &Value) -> Result<Schema> {
                                 || s == "date-time"
                                 || s == "ipv4"
                                 || s == "ipv6"
+                                || s == "uuid"
                             {
                                 schema.format = Some(s.clone());
                             } else {
