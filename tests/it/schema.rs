@@ -189,10 +189,11 @@ fn test_delta_encoding_integers() {
     // compact_encode: NUMBER_INT (0x40) + i16 (2 bytes) = 3 bytes total (approx) + length prefix uvarint.
     // 1005 fits in i16.
     // Old encoding: uvarint(len) + [tag, bytes...]
-    // New encoding: uvarint(delta) -> 1 byte.
+    // New encoding: TAG_OPTIMIZED_NUMBER (0xFF) + uvarint(delta) -> 2 bytes.
 
-    assert_eq!(buf.len(), 1);
-    assert_eq!(buf[0], 0x05);
+    assert_eq!(buf.len(), 2);
+    assert_eq!(buf[0], 0xFF);
+    assert_eq!(buf[1], 0x05);
 
     let decoded = decode(&buf, &schema);
 

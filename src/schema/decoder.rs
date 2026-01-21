@@ -11,6 +11,7 @@ const TAG_NUMBER: u8 = 0x03;
 const TAG_STRING: u8 = 0x04;
 const TAG_ARRAY: u8 = 0x05;
 const TAG_OBJECT: u8 = 0x06;
+const TAG_OPTIMIZED_NUMBER: u8 = 0xFF;
 
 pub fn decode(buf: &[u8], schema: &Schema) -> Value<'static> {
     let mut cursor = Cursor::new(buf);
@@ -43,40 +44,45 @@ fn decode_value(cursor: &mut Cursor<&[u8]>, schema: Option<&Schema>) -> Value<'s
                     && (types.contains(&InstanceType::Integer)
                         || types.contains(&InstanceType::Number))
                 {
-                    if let Some(mul) = schema.multiple_of {
-                        let val = if let Some(min) = schema.minimum {
-                            if min % mul == 0 {
-                                let delta = read_uvarint128(cursor);
-                                (delta as i128) * mul + min
+                    let inner_tag = read_byte(cursor);
+                    if inner_tag == TAG_OPTIMIZED_NUMBER {
+                        if let Some(mul) = schema.multiple_of {
+                            let val = if let Some(min) = schema.minimum {
+                                if min % mul == 0 {
+                                    let delta = read_uvarint128(cursor);
+                                    (delta as i128) * mul + min
+                                } else {
+                                    let res = read_uvarint128(cursor);
+                                    (res as i128) * mul
+                                }
                             } else {
                                 let res = read_uvarint128(cursor);
                                 (res as i128) * mul
+                            };
+                            if let Ok(v) = i64::try_from(val) {
+                                return Value::Number(Number::Int64(v));
                             }
-                        } else {
-                            let res = read_uvarint128(cursor);
-                            (res as i128) * mul
-                        };
-                        if let Ok(v) = i64::try_from(val) {
-                            return Value::Number(Number::Int64(v));
+                            return Value::Number(Number::Decimal128(crate::Decimal128 {
+                                scale: 0,
+                                value: val,
+                            }));
+                        } else if let Some(min) = schema.minimum {
+                            // Delta encoding
+                            let delta = read_uvarint128(cursor);
+                            let val = min + delta as i128;
+                            if let Ok(v) = i64::try_from(val) {
+                                return Value::Number(Number::Int64(v));
+                            }
+                            return Value::Number(Number::Decimal128(crate::Decimal128 {
+                                scale: 0,
+                                value: val,
+                            }));
                         }
-                        return Value::Number(Number::Decimal128(crate::Decimal128 {
-                            scale: 0,
-                            value: val,
-                        }));
-                    } else if let Some(min) = schema.minimum {
-                        // Delta encoding
-                        let delta = read_uvarint128(cursor);
-                        let val = min + delta as i128;
-                        if let Ok(v) = i64::try_from(val) {
-                            return Value::Number(Number::Int64(v));
-                        }
-                        return Value::Number(Number::Decimal128(crate::Decimal128 {
-                            scale: 0,
-                            value: val,
-                        }));
+                    } else {
+                        // Standard encoding, reset inner_tag read
+                        cursor.set_position(cursor.position() - 1);
                     }
-                }
-                // Reset cursor
+                } // Reset cursor
                 cursor.set_position(pos);
             }
             None => {}
@@ -133,40 +139,46 @@ fn decode_typed_value(
             Value::Bool(b)
         }
         InstanceType::Number | InstanceType::Integer => {
-            if let Some(mul) = schema.multiple_of {
-                let val = if let Some(min) = schema.minimum {
-                    if min % mul == 0 {
-                        let delta = read_uvarint128(cursor);
-                        (delta as i128) * mul + min
+            let tag = read_byte(cursor);
+            if tag == TAG_OPTIMIZED_NUMBER {
+                if let Some(mul) = schema.multiple_of {
+                    let val = if let Some(min) = schema.minimum {
+                        if min % mul == 0 {
+                            let delta = read_uvarint128(cursor);
+                            (delta as i128) * mul + min
+                        } else {
+                            let res = read_uvarint128(cursor);
+                            (res as i128) * mul
+                        }
                     } else {
                         let res = read_uvarint128(cursor);
                         (res as i128) * mul
+                    };
+                    if let Ok(v) = i64::try_from(val) {
+                        return Value::Number(Number::Int64(v));
                     }
-                } else {
-                    let res = read_uvarint128(cursor);
-                    (res as i128) * mul
-                };
-                if let Ok(v) = i64::try_from(val) {
-                    return Value::Number(Number::Int64(v));
+                    return Value::Number(Number::Decimal128(crate::Decimal128 {
+                        scale: 0,
+                        value: val,
+                    }));
+                } else if let Some(min) = schema.minimum {
+                    let delta = read_uvarint128(cursor);
+                    // Convert u128 delta to i128 to add to min (i128)
+                    let val = min + delta as i128;
+                    // Try to fit in i64 if possible for cleaner Value
+                    if let Ok(v) = i64::try_from(val) {
+                        return Value::Number(Number::Int64(v));
+                    }
+                    // Fallback to Decimal128 or just keep it as is if Number supported i128 directly
+                    // Number supports Decimal128 which holds i128
+                    return Value::Number(Number::Decimal128(crate::Decimal128 {
+                        scale: 0,
+                        value: val,
+                    }));
                 }
-                return Value::Number(Number::Decimal128(crate::Decimal128 {
-                    scale: 0,
-                    value: val,
-                }));
-            } else if let Some(min) = schema.minimum {
-                let delta = read_uvarint128(cursor);
-                // Convert u128 delta to i128 to add to min (i128)
-                let val = min + delta as i128;
-                // Try to fit in i64 if possible for cleaner Value
-                if let Ok(v) = i64::try_from(val) {
-                    return Value::Number(Number::Int64(v));
-                }
-                // Fallback to Decimal128 or just keep it as is if Number supported i128 directly
-                // Number supports Decimal128 which holds i128
-                return Value::Number(Number::Decimal128(crate::Decimal128 {
-                    scale: 0,
-                    value: val,
-                }));
+            } else {
+                // Standard encoding, reset tag read
+                cursor.set_position(cursor.position() - 1);
             }
             let len = read_uvarint(cursor) as usize;
             let bytes = read_bytes(cursor, len);

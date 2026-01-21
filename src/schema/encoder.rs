@@ -10,6 +10,7 @@ const TAG_NUMBER: u8 = 0x03;
 const TAG_STRING: u8 = 0x04;
 const TAG_ARRAY: u8 = 0x05;
 const TAG_OBJECT: u8 = 0x06;
+const TAG_OPTIMIZED_NUMBER: u8 = 0xFF;
 
 use crate::from_raw_jsonb;
 
@@ -48,18 +49,21 @@ fn encode_value(value: &Value, schema: Option<&Schema>, buf: &mut Vec<u8>) {
                                         if val >= min {
                                             let delta = (val - min) / mul;
                                             buf.push(TAG_NUMBER);
+                                            buf.push(TAG_OPTIMIZED_NUMBER);
                                             write_uvarint128(buf, delta as u128);
                                             return;
                                         }
                                     } else {
                                         let res = val / mul;
                                         buf.push(TAG_NUMBER);
+                                        buf.push(TAG_OPTIMIZED_NUMBER);
                                         write_uvarint128(buf, res as u128);
                                         return;
                                     }
                                 } else {
                                     let res = val / mul;
                                     buf.push(TAG_NUMBER);
+                                    buf.push(TAG_OPTIMIZED_NUMBER);
                                     write_uvarint128(buf, res as u128);
                                     return;
                                 }
@@ -67,6 +71,7 @@ fn encode_value(value: &Value, schema: Option<&Schema>, buf: &mut Vec<u8>) {
                                 if val >= min {
                                     let delta = (val - min) as u128;
                                     buf.push(TAG_NUMBER);
+                                    buf.push(TAG_OPTIMIZED_NUMBER);
                                     write_uvarint128(buf, delta);
                                     return;
                                 }
@@ -103,28 +108,44 @@ fn encode_typed_value(
             buf.push(if *b { 1 } else { 0 });
         }
         (InstanceType::Number, Value::Number(n)) | (InstanceType::Integer, Value::Number(n)) => {
-            if let Some(val) = n.as_i128() {
-                if let Some(mul) = schema.multiple_of {
+            if let Some(mul) = schema.multiple_of {
+                if let Some(val) = n.as_i128() {
                     if let Some(min) = schema.minimum {
                         if min % mul == 0 {
                             if val >= min {
                                 let delta = (val - min) / mul;
+                                buf.push(TAG_OPTIMIZED_NUMBER);
                                 write_uvarint128(buf, delta as u128);
                                 return;
                             }
                         } else {
                             let res = val / mul;
+                            buf.push(TAG_OPTIMIZED_NUMBER);
                             write_uvarint128(buf, res as u128);
                             return;
                         }
                     } else {
                         let res = val / mul;
+                        buf.push(TAG_OPTIMIZED_NUMBER);
                         write_uvarint128(buf, res as u128);
                         return;
                     }
-                } else if let Some(min) = schema.minimum {
+                } else {
+                    // Try float optimization if it's perfectly divisible
+                    let f_val = n.as_f64();
+                    let f_mul = mul as f64;
+                    if (f_val % f_mul) == 0.0 {
+                        let res = (f_val / f_mul) as i128;
+                        buf.push(TAG_OPTIMIZED_NUMBER);
+                        write_uvarint128(buf, res as u128);
+                        return;
+                    }
+                }
+            } else if let Some(min) = schema.minimum {
+                if let Some(val) = n.as_i128() {
                     if val >= min {
                         let delta = (val - min) as u128;
+                        buf.push(TAG_OPTIMIZED_NUMBER);
                         write_uvarint128(buf, delta);
                         return;
                     }
