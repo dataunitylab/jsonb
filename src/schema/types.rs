@@ -15,6 +15,10 @@ pub struct Schema {
     pub maximum: Option<i128>,
     #[serde(rename = "multipleOf", skip_serializing_if = "Option::is_none")]
     pub multiple_of: Option<i128>,
+    #[serde(rename = "prefixItems", skip_serializing_if = "Option::is_none")]
+    pub prefix_items: Option<Vec<Schema>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub items: Option<Box<Schema>>,
     #[serde(rename = "enum", skip_serializing_if = "Option::is_none")]
     pub enum_values: Option<Vec<serde_json::Value>>,
     #[serde(rename = "const", skip_serializing_if = "Option::is_none")]

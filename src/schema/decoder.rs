@@ -217,8 +217,24 @@ fn decode_typed_value(
         InstanceType::Array => {
             let len = read_uvarint(cursor);
             let mut arr = Vec::with_capacity(len as usize);
-            for _ in 0..len {
-                arr.push(decode_untyped_value(cursor));
+            for i in 0..len {
+                let mut decoded_item = None;
+                if let Some(prefix_items) = &schema.prefix_items {
+                    if (i as usize) < prefix_items.len() {
+                        decoded_item = Some(decode_value(cursor, Some(&prefix_items[i as usize])));
+                    }
+                }
+                if decoded_item.is_none() {
+                    if let Some(items) = &schema.items {
+                        decoded_item = Some(decode_value(cursor, Some(items)));
+                    }
+                }
+
+                if let Some(item) = decoded_item {
+                    arr.push(item);
+                } else {
+                    arr.push(decode_untyped_value(cursor));
+                }
             }
             Value::Array(arr)
         }

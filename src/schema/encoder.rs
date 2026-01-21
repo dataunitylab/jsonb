@@ -190,7 +190,17 @@ fn encode_typed_value(
         }
         (InstanceType::Array, Value::Array(arr)) => {
             write_uvarint(buf, arr.len() as u64);
-            for v in arr {
+            for (i, v) in arr.iter().enumerate() {
+                if let Some(prefix_items) = &schema.prefix_items {
+                    if i < prefix_items.len() {
+                        encode_value(v, Some(&prefix_items[i]), buf);
+                        continue;
+                    }
+                }
+                if let Some(items) = &schema.items {
+                    encode_value(v, Some(items), buf);
+                    continue;
+                }
                 encode_untyped_value(v, buf);
             }
         }

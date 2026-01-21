@@ -13,6 +13,8 @@ fn test_multiple_of_optimization() {
         minimum: None,
         maximum: None,
         multiple_of: Some(multiple),
+        prefix_items: None,
+        items: None,
         enum_values: None,
         const_value: None,
     };
@@ -48,6 +50,8 @@ fn test_multiple_of_with_aligned_minimum() {
         minimum: Some(min),
         maximum: None,
         multiple_of: Some(multiple),
+        prefix_items: None,
+        items: None,
         enum_values: None,
         const_value: None,
     };
@@ -86,6 +90,8 @@ fn test_multiple_of_with_unaligned_minimum() {
         minimum: Some(min),
         maximum: None,
         multiple_of: Some(multiple),
+        prefix_items: None,
+        items: None,
         enum_values: None,
         const_value: None,
     };
@@ -126,6 +132,8 @@ fn test_multiple_of_union() {
         minimum: None,
         maximum: None,
         multiple_of: Some(multiple),
+        prefix_items: None,
+        items: None,
         enum_values: None,
         const_value: None,
     };
@@ -166,6 +174,8 @@ fn test_multiple_of_float() {
         minimum: None,
         maximum: None,
         multiple_of: Some(multiple),
+        prefix_items: None,
+        items: None,
         enum_values: None,
         const_value: None,
     };
@@ -201,6 +211,8 @@ fn test_multiple_of_float_unoptimized() {
         minimum: None,
         maximum: None,
         multiple_of: Some(multiple),
+        prefix_items: None,
+        items: None,
         enum_values: None,
         const_value: None,
     };
@@ -235,6 +247,8 @@ fn test_multiple_of_decimal() {
         minimum: None,
         maximum: None,
         multiple_of: Some(multiple),
+        prefix_items: None,
+        items: None,
         enum_values: None,
         const_value: None,
     };
