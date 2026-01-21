@@ -1,4 +1,4 @@
-use jsonb_schema::schema::{decode, encode, from_serde_json, InstanceType, Schema, SingleOrVec};
+use jsonb_schema::schema::{decode, encode, from_serde_json};
 use jsonb_schema::Value;
 use serde_json::json;
 use std::borrow::Cow;
