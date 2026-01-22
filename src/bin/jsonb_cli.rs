@@ -1,14 +1,14 @@
 use clap::Parser;
-use jsonb_schema::schema::{encode, from_serde_json, Schema};
+use jsonb_schema::schema::{decode, encode, from_serde_json, Schema};
 use jsonb_schema::Value;
 use std::fs::File;
-use std::io::{BufRead, BufReader, Write};
+use std::io::{BufRead, BufReader, Read, Write};
 use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
-    /// Path to the JSON Lines input file
+    /// Path to the input file
     #[arg(short, long)]
     input: PathBuf,
 
@@ -19,6 +19,10 @@ struct Args {
     /// Optional path to a JSON Schema file
     #[arg(short, long)]
     schema: Option<PathBuf>,
+
+    /// Decode the input file
+    #[arg(short, long)]
+    decode: bool,
 }
 
 fn main() -> anyhow::Result<()> {
@@ -34,39 +38,61 @@ fn main() -> anyhow::Result<()> {
     };
 
     let input_file = File::open(args.input)?;
-    let reader = BufReader::new(input_file);
+    let mut reader = BufReader::new(input_file);
     let mut output_file = File::create(args.output)?;
 
-    for line in reader.lines() {
-        let line = line?;
-        if line.trim().is_empty() {
-            continue;
+    if args.decode {
+        loop {
+            let mut len_buf = [0u8; 4];
+            match reader.read_exact(&mut len_buf) {
+                Ok(_) => {}
+                Err(e) if e.kind() == std::io::ErrorKind::UnexpectedEof => break,
+                Err(e) => return Err(e.into()),
+            }
+            let len = u32::from_le_bytes(len_buf) as usize;
+            let mut buf = vec![0u8; len];
+            reader.read_exact(&mut buf)?;
+
+            let val = if let Some(s) = &schema {
+                decode(&buf, s)
+            } else {
+                decode(&buf, &Schema::default())
+            };
+
+            writeln!(output_file, "{}", val)?;
         }
+    } else {
+        for line in reader.lines() {
+            let line = line?;
+            if line.trim().is_empty() {
+                continue;
+            }
 
-        let json_val: serde_json::Value = serde_json::from_str(&line)?;
-        // Convert serde_json::Value to jsonb_schema::Value
-        // We need a helper for this conversion as it's not directly exposed in public API simply
-        // But we can rely on the fact that Value implements From<serde_json::Value> if available,
-        // or we can implement a simple converter here similar to what we did in decoder.
+            let json_val: serde_json::Value = serde_json::from_str(&line)?;
+            // Convert serde_json::Value to jsonb_schema::Value
+            // We need a helper for this conversion as it's not directly exposed in public API simply
+            // But we can rely on the fact that Value implements From<serde_json::Value> if available,
+            // or we can implement a simple converter here similar to what we did in decoder.
 
-        let value = serde_to_jsonb_value(&json_val);
+            let value = serde_to_jsonb_value(&json_val);
 
-        let mut buf = Vec::new();
-        if let Some(s) = &schema {
-            encode(&value, s, &mut buf);
-        } else {
-            // If no schema, encode with empty/default schema logic or standard encoding?
-            // The prompt says "jsonb or jsonb_schema encoded".
-            // We can use an empty schema which falls back to untyped encoding.
-            let empty_schema = Schema::default();
-            encode(&value, &empty_schema, &mut buf);
+            let mut buf = Vec::new();
+            if let Some(s) = &schema {
+                encode(&value, s, &mut buf);
+            } else {
+                // If no schema, encode with empty/default schema logic or standard encoding?
+                // The prompt says "jsonb or jsonb_schema encoded".
+                // We can use an empty schema which falls back to untyped encoding.
+                let empty_schema = Schema::default();
+                encode(&value, &empty_schema, &mut buf);
+            }
+
+            // Write length prefix (u32 LE for simplicity in this test binary, or uvarint)
+            // Standard usually uses uvarint or fixed length. Let's use u32 LE length prefix for easy reading.
+            let len = buf.len() as u32;
+            output_file.write_all(&len.to_le_bytes())?;
+            output_file.write_all(&buf)?;
         }
-
-        // Write length prefix (u32 LE for simplicity in this test binary, or uvarint)
-        // Standard usually uses uvarint or fixed length. Let's use u32 LE length prefix for easy reading.
-        let len = buf.len() as u32;
-        output_file.write_all(&len.to_le_bytes())?;
-        output_file.write_all(&buf)?;
     }
 
     Ok(())
