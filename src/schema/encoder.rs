@@ -378,7 +378,11 @@ fn encode_typed_value(
             for (k, v) in extras {
                 write_uvarint(buf, k.len() as u64);
                 buf.extend_from_slice(k.as_bytes());
-                encode_untyped_value(v, buf);
+                if let Some(sub_schema) = properties.get(k) {
+                    encode_value(v, Some(sub_schema), buf);
+                } else {
+                    encode_untyped_value(v, buf);
+                }
             }
         }
         (InstanceType::Array, Value::Array(arr)) => {

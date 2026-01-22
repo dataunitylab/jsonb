@@ -336,7 +336,11 @@ fn decode_typed_value(
                 let k_len = read_uvarint(cursor) as usize;
                 let k_bytes = read_bytes(cursor, k_len);
                 let k = String::from_utf8_lossy(k_bytes).into_owned();
-                let v = decode_untyped_value(cursor);
+                let v = if let Some(sub_schema) = properties.get(&k) {
+                    decode_value(cursor, Some(sub_schema))
+                } else {
+                    decode_untyped_value(cursor)
+                };
                 obj.insert(k, v);
             }
             Value::Object(obj)
