@@ -170,15 +170,15 @@ fn encode_typed_value(
                 if encode_string_with_format(format, s, buf) {
                     return;
                 }
-            } else if schema.pattern_prefix.is_some() || schema.pattern_suffix.is_some() {
-                if encode_string_with_prefix_or_suffix(
+            } else if (schema.pattern_prefix.is_some() || schema.pattern_suffix.is_some())
+                && encode_string_with_prefix_or_suffix(
                     &schema.pattern_prefix,
                     &schema.pattern_suffix,
                     s,
                     buf,
-                ) {
-                    return;
-                }
+                )
+            {
+                return;
             }
 
             if let Some(min) = schema.min_length {
@@ -287,7 +287,7 @@ fn encode_string_with_format(format: &str, s: &str, buf: &mut Vec<u8>) -> bool {
             let y = date.year();
             let m = date.month();
             let d = date.day();
-            if y >= 0 && y <= 9999 {
+            if (0..=9999).contains(&y) {
                 buf.push(TAG_DATE_COMPRESSED);
                 buf.extend_from_slice(&(y as u16).to_be_bytes());
                 buf.push(m as u8);
@@ -297,14 +297,14 @@ fn encode_string_with_format(format: &str, s: &str, buf: &mut Vec<u8>) -> bool {
         }
         buf.push(TAG_STRING_UNCOMPRESSED);
     } else if format == "time" {
-        let mut time_part: &str = &s;
+        let mut time_part: &str = s;
         let mut sign = 0; // 0=Z, 1=+, 2=-
         let mut off_h = 0;
         let mut off_m = 0;
         let mut valid = false;
 
-        if s.ends_with('Z') {
-            time_part = &s[..s.len() - 1];
+        if let Some(stripped) = s.strip_suffix('Z') {
+            time_part = stripped;
             sign = 0;
             valid = true;
         } else if s.len() >= 6 {
@@ -387,7 +387,7 @@ fn encode_string_with_format(format: &str, s: &str, buf: &mut Vec<u8>) -> bool {
                         let m = date.month();
                         let d = date.day();
 
-                        if y >= 0 && y <= 9999 && off_h <= 23 && off_m <= 60 {
+                        if (0..=9999).contains(&y) && off_h <= 23 && off_m <= 60 {
                             buf.push(TAG_DATE_TIME_COMPRESSED);
                             // Date
                             buf.extend_from_slice(&(y as u16).to_be_bytes());
@@ -440,7 +440,7 @@ fn encode_string_with_prefix_or_suffix(
     s: &str,
     buf: &mut Vec<u8>,
 ) -> bool {
-    let mut s_slice: &str = &s;
+    let mut s_slice: &str = s;
     let mut matches = true;
 
     if let Some(prefix) = &maybe_prefix {

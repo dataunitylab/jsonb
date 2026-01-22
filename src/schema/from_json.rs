@@ -229,9 +229,9 @@ fn extract_pattern_optimization(s: &str) -> (Option<String>, Option<String>) {
     // Prefix extraction
     if s.starts_with('^') {
         let mut p = String::new();
-        let mut chars = s.chars().skip(1); // Skip ^
+        let chars = s.chars().skip(1); // Skip ^
         let mut escaped = false;
-        while let Some(c) = chars.next() {
+        for c in chars {
             if escaped {
                 p.push(c);
                 escaped = false;
@@ -250,8 +250,7 @@ fn extract_pattern_optimization(s: &str) -> (Option<String>, Option<String>) {
     }
 
     // Suffix extraction
-    if s.ends_with('$') {
-        let s_no_anchor = &s[..s.len() - 1];
+    if let Some(s_no_anchor) = s.strip_suffix('$') {
         let chars: Vec<char> = s_no_anchor.chars().collect();
         let mut suf = String::new();
 
