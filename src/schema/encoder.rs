@@ -190,37 +190,46 @@ fn encode_typed_value(
             let properties_default = BTreeMap::new();
             let properties = schema.properties.as_ref().unwrap_or(&properties_default);
 
-            // 1. Required keys
-            for key in required {
-                let val = obj.get(key).unwrap_or(&Value::Null);
-                let sub_schema = properties.get(key);
-                encode_value(val, sub_schema, buf);
-            }
-
-            // 2. Extra keys
-            let mut extras = Vec::new();
-            for (k, v) in obj {
-                if !required.contains(k) {
-                    extras.push((k, v));
-                }
-            }
-
-            write_uvarint(buf, extras.len() as u64);
-            for (k, v) in extras {
-                write_uvarint(buf, k.len() as u64);
-                buf.extend_from_slice(k.as_bytes());
-                if let Some(sub_schema) = properties.get(k) {
-                    encode_value(v, Some(sub_schema), buf);
-                } else {
-                    encode_untyped_value(v, buf);
-                }
-            }
+            encode_object(required, properties, obj, buf);
         }
         (InstanceType::Array, Value::Array(arr)) => {
             encode_array(&schema.prefix_items, &schema.items, arr, buf);
         }
         _ => {
             encode_untyped_value(value, buf);
+        }
+    }
+}
+
+fn encode_object(
+    required: &BTreeSet<String>,
+    properties: &BTreeMap<String, Schema>,
+    obj: &BTreeMap<String, Value>,
+    buf: &mut Vec<u8>,
+) {
+    // 1. Required keys
+    for key in required {
+        let val = obj.get(key).unwrap_or(&Value::Null);
+        let sub_schema = properties.get(key);
+        encode_value(val, sub_schema, buf);
+    }
+
+    // 2. Extra keys
+    let mut extras = Vec::new();
+    for (k, v) in obj {
+        if !required.contains(k) {
+            extras.push((k, v));
+        }
+    }
+
+    write_uvarint(buf, extras.len() as u64);
+    for (k, v) in extras {
+        write_uvarint(buf, k.len() as u64);
+        buf.extend_from_slice(k.as_bytes());
+        if let Some(sub_schema) = properties.get(k) {
+            encode_value(v, Some(sub_schema), buf);
+        } else {
+            encode_untyped_value(v, buf);
         }
     }
 }
