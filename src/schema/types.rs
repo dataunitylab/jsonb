@@ -15,6 +15,10 @@ pub struct Schema {
     pub maximum: Option<i128>,
     #[serde(rename = "multipleOf", skip_serializing_if = "Option::is_none")]
     pub multiple_of: Option<i128>,
+    #[serde(rename = "minItems", skip_serializing_if = "Option::is_none")]
+    pub min_items: Option<u64>,
+    #[serde(rename = "maxItems", skip_serializing_if = "Option::is_none")]
+    pub max_items: Option<u64>,
     #[serde(rename = "prefixItems", skip_serializing_if = "Option::is_none")]
     pub prefix_items: Option<Vec<Schema>>,
     #[serde(skip_serializing_if = "Option::is_none")]

@@ -193,7 +193,13 @@ fn encode_typed_value(
             encode_object(required, properties, obj, buf);
         }
         (InstanceType::Array, Value::Array(arr)) => {
-            encode_array(&schema.prefix_items, &schema.items, arr, buf);
+            encode_array(
+                &schema.prefix_items,
+                &schema.items,
+                schema.min_items,
+                arr,
+                buf,
+            );
         }
         _ => {
             encode_untyped_value(value, buf);
@@ -237,10 +243,21 @@ fn encode_object(
 fn encode_array(
     prefix_items: &Option<Vec<Schema>>,
     items: &Option<Box<Schema>>,
+    min_items: Option<u64>,
     arr: &[Value],
     buf: &mut Vec<u8>,
 ) {
-    write_uvarint(buf, arr.len() as u64);
+    if let Some(min) = min_items {
+        if (arr.len() as u64) >= min {
+            write_uvarint(buf, (arr.len() as u64) - min);
+        } else {
+            // Should theoretically not happen if validation is done elsewhere, but encoding safe fallback
+            write_uvarint(buf, arr.len() as u64);
+        }
+    } else {
+        write_uvarint(buf, arr.len() as u64);
+    }
+
     for (i, v) in arr.iter().enumerate() {
         if let Some(prefix_items) = prefix_items {
             if i < prefix_items.len() {

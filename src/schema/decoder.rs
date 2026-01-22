@@ -346,7 +346,13 @@ fn decode_typed_value(
             Value::Object(obj)
         }
         InstanceType::Array => {
-            let len = read_uvarint(cursor);
+            let encoded_len = read_uvarint(cursor);
+            let len = if let Some(min) = schema.min_items {
+                encoded_len + min
+            } else {
+                encoded_len
+            };
+
             let mut arr = Vec::with_capacity(len as usize);
             for i in 0..len {
                 let mut decoded_item = None;

@@ -80,6 +80,12 @@ pub fn from_serde_json(json: &Value) -> Result<Schema> {
                     "multipleOf" => {
                         schema.multiple_of = Some(parse_i128(v, "multipleOf")?);
                     }
+                    "minItems" => {
+                        schema.min_items = Some(parse_u64(v, "minItems")?);
+                    }
+                    "maxItems" => {
+                        schema.max_items = Some(parse_u64(v, "maxItems")?);
+                    }
                     "prefixItems" => {
                         if let Value::Array(items) = v {
                             let mut schemas = Vec::new();
@@ -188,6 +194,22 @@ fn parse_i128(v: &Value, field: &str) -> Result<i128> {
                 } else {
                     Err(Error::Message(format!("{} must be a valid number", field)))
                 }
+            }
+        }
+        _ => Err(Error::Message(format!("{} must be a number", field))),
+    }
+}
+
+fn parse_u64(v: &Value, field: &str) -> Result<u64> {
+    match v {
+        Value::Number(n) => {
+            if let Some(u) = n.as_u64() {
+                Ok(u)
+            } else {
+                Err(Error::Message(format!(
+                    "{} must be a non-negative integer",
+                    field
+                )))
             }
         }
         _ => Err(Error::Message(format!("{} must be a number", field))),

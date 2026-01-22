@@ -20,6 +20,7 @@ mod keypath_parser;
 mod number;
 mod parser;
 mod schema;
+mod schema_array_length;
 mod schema_dollar_schema;
 mod schema_enum_const;
 mod schema_format_date;
