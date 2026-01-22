@@ -1,4 +1,4 @@
-// Copyright 2023 Datafuse Labs.
+// Copyright 2023 Dataෙන Labs.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
 use std::borrow::Cow;
 use std::cmp::Ordering;
 use std::collections::VecDeque;
+use std::io::Cursor;
 
 use crate::core::ArrayBuilder;
 use crate::core::ArrayIterator;
@@ -31,14 +32,52 @@ use crate::jsonpath::PathValue;
 use crate::jsonpath::RecursiveLevel;
 use crate::jsonpath::UnaryOperator;
 use crate::number::Number;
+use crate::schema::decoder::*;
+use crate::schema::encoder::encode;
+use crate::schema::{InstanceType, Schema, SingleOrVec};
 use crate::to_owned_jsonb;
 use crate::Error;
 use crate::OwnedJsonb;
 use crate::RawJsonb;
+use crate::Value;
+
+#[derive(Debug, Clone)]
+enum EvaluationValue<'a> {
+    Path(PathValue<'a>),
+    SchemaEncoded(RawJsonb<'a>, &'a Schema),
+}
+
+impl<'a> EvaluationValue<'a> {
+    fn as_path_value(&self) -> Result<PathValue<'a>> {
+        match self {
+            EvaluationValue::Path(p) => Ok(p.clone()),
+            EvaluationValue::SchemaEncoded(raw, schema) => {
+                // We need to decode.
+                let val = crate::schema::decode(raw.data, schema);
+                // Convert Value to PathValue
+                Ok(value_to_path_value(val))
+            }
+        }
+    }
+}
+
+fn value_to_path_value(v: Value<'_>) -> PathValue<'_> {
+    match v {
+        Value::Null => PathValue::Null,
+        Value::Bool(b) => PathValue::Boolean(b),
+        Value::Number(n) => PathValue::Number(n),
+        Value::String(s) => PathValue::String(s),
+        Value::Array(_) | Value::Object(_) => {
+            // Map complex to Null for scalar comparisons
+            PathValue::Null
+        }
+        _ => PathValue::Null,
+    }
+}
 
 #[derive(Debug)]
 enum ExprValue<'a> {
-    Values(Vec<PathValue<'a>>),
+    Values(Vec<EvaluationValue<'a>>),
     Value(Box<PathValue<'a>>),
 }
 
@@ -51,7 +90,15 @@ impl ExprValue<'_> {
                 }
                 let val = vals.pop().unwrap();
                 match val {
-                    PathValue::Number(num) => Ok(num),
+                    EvaluationValue::Path(PathValue::Number(num)) => Ok(num),
+                    EvaluationValue::SchemaEncoded(raw, schema) => {
+                        let val = crate::schema::decode(raw.data, schema);
+                        if let Value::Number(n) = val {
+                            Ok(n)
+                        } else {
+                            Err(Error::InvalidJsonPath)
+                        }
+                    }
                     _ => Err(Error::InvalidJsonPath),
                 }
             }
@@ -67,10 +114,17 @@ impl ExprValue<'_> {
             ExprValue::Values(vals) => {
                 let mut nums = Vec::with_capacity(vals.len());
                 for val in vals {
-                    if let PathValue::Number(num) = val {
-                        nums.push(num);
-                    } else {
-                        return Err(Error::InvalidJsonPath);
+                    match val {
+                        EvaluationValue::Path(PathValue::Number(num)) => nums.push(num),
+                        EvaluationValue::SchemaEncoded(raw, schema) => {
+                            let val = crate::schema::decode(raw.data, schema);
+                            if let Value::Number(n) = val {
+                                nums.push(n);
+                            } else {
+                                return Err(Error::InvalidJsonPath);
+                            }
+                        }
+                        _ => return Err(Error::InvalidJsonPath),
                     }
                 }
                 Ok(nums)
@@ -83,6 +137,12 @@ impl ExprValue<'_> {
     }
 }
 
+#[derive(Clone, Debug)]
+struct SchemaItem<'a> {
+    item: JsonbItem<'a>,
+    schema: Option<&'a Schema>,
+}
+
 /// Represents the state of a JSON Path selection process.
 ///
 /// It holds the root JSONB value and the intermediate results (items) found during
@@ -91,7 +151,9 @@ pub struct Selector<'a> {
     /// The root JSONB value against which the path is executed.
     root_jsonb: RawJsonb<'a>,
     /// A queue holding the JSONB items that match the path criteria during execution.
-    items: VecDeque<JsonbItem<'a>>,
+    items: VecDeque<SchemaItem<'a>>,
+    /// Optional schema for the root value.
+    root_schema: Option<&'a Schema>,
 }
 
 impl<'a> Selector<'a> {
@@ -104,7 +166,14 @@ impl<'a> Selector<'a> {
         Self {
             root_jsonb,
             items: VecDeque::new(),
+            root_schema: None,
         }
+    }
+
+    /// Attaches a schema to the selector, enabling schema-aware traversal and optimizations.
+    pub fn with_schema(mut self, schema: &'a Schema) -> Self {
+        self.root_schema = Some(schema);
+        self
     }
 
     /// Executes the `JsonPath` and collects all matching items into a `Vec<OwnedJsonb>`.
@@ -146,9 +215,22 @@ impl<'a> Selector<'a> {
     pub fn select_values(&mut self, json_path: &'a JsonPath<'a>) -> Result<Vec<OwnedJsonb>> {
         self.execute(json_path)?;
         let mut values = Vec::with_capacity(self.items.len());
-        while let Some(item) = self.items.pop_front() {
-            let value = OwnedJsonb::from_item(item)?;
-            values.push(value);
+        while let Some(schema_item) = self.items.pop_front() {
+            let item = schema_item.item;
+            if let Some(schema) = schema_item.schema {
+                if let JsonbItem::Raw(raw) = item {
+                    let decoded = crate::schema::decode(raw.data, schema);
+                    let mut buf = Vec::new();
+                    decoded.write_to_vec(&mut buf);
+                    values.push(OwnedJsonb::new(buf));
+                } else {
+                    let value = OwnedJsonb::from_item(item)?;
+                    values.push(value);
+                }
+            } else {
+                let value = OwnedJsonb::from_item(item)?;
+                values.push(value);
+            }
         }
         Ok(values)
     }
@@ -189,8 +271,19 @@ impl<'a> Selector<'a> {
     pub fn select_array(&mut self, json_path: &'a JsonPath<'a>) -> Result<OwnedJsonb> {
         self.execute(json_path)?;
         let mut builder = ArrayBuilder::with_capacity(self.items.len());
-        while let Some(item) = self.items.pop_front() {
-            builder.push_jsonb_item(item);
+        while let Some(schema_item) = self.items.pop_front() {
+            if let Some(schema) = schema_item.schema {
+                if let JsonbItem::Raw(raw) = schema_item.item {
+                    let decoded = crate::schema::decode(raw.data, schema);
+                    let mut buf = Vec::new();
+                    decoded.write_to_vec(&mut buf);
+                    builder.push_jsonb_item(JsonbItem::Owned(OwnedJsonb::new(buf)));
+                } else {
+                    builder.push_jsonb_item(schema_item.item);
+                }
+            } else {
+                builder.push_jsonb_item(schema_item.item);
+            }
         }
         builder.build()
     }
@@ -235,9 +328,21 @@ impl<'a> Selector<'a> {
     /// * `RawJsonb::select_first_by_path`.
     pub fn select_first(&mut self, json_path: &'a JsonPath<'a>) -> Result<Option<OwnedJsonb>> {
         self.execute(json_path)?;
-        if let Some(item) = self.items.pop_front() {
-            let value = OwnedJsonb::from_item(item)?;
-            Ok(Some(value))
+        if let Some(schema_item) = self.items.pop_front() {
+            if let Some(schema) = schema_item.schema {
+                if let JsonbItem::Raw(raw) = schema_item.item {
+                    let decoded = crate::schema::decode(raw.data, schema);
+                    let mut buf = Vec::new();
+                    decoded.write_to_vec(&mut buf);
+                    Ok(Some(OwnedJsonb::new(buf)))
+                } else {
+                    let value = OwnedJsonb::from_item(schema_item.item)?;
+                    Ok(Some(value))
+                }
+            } else {
+                let value = OwnedJsonb::from_item(schema_item.item)?;
+                Ok(Some(value))
+            }
         } else {
             Ok(None)
         }
@@ -291,14 +396,37 @@ impl<'a> Selector<'a> {
         self.execute(json_path)?;
         if self.items.len() > 1 {
             let mut builder = ArrayBuilder::with_capacity(self.items.len());
-            while let Some(item) = self.items.pop_front() {
-                builder.push_jsonb_item(item);
+            while let Some(schema_item) = self.items.pop_front() {
+                if let Some(schema) = schema_item.schema {
+                    if let JsonbItem::Raw(raw) = schema_item.item {
+                        let decoded = crate::schema::decode(raw.data, schema);
+                        let mut buf = Vec::new();
+                        decoded.write_to_vec(&mut buf);
+                        builder.push_jsonb_item(JsonbItem::Owned(OwnedJsonb::new(buf)));
+                    } else {
+                        builder.push_jsonb_item(schema_item.item);
+                    }
+                } else {
+                    builder.push_jsonb_item(schema_item.item);
+                }
             }
             let array = builder.build()?;
             Ok(Some(array))
-        } else if let Some(item) = self.items.pop_front() {
-            let value = OwnedJsonb::from_item(item)?;
-            Ok(Some(value))
+        } else if let Some(schema_item) = self.items.pop_front() {
+            if let Some(schema) = schema_item.schema {
+                if let JsonbItem::Raw(raw) = schema_item.item {
+                    let decoded = crate::schema::decode(raw.data, schema);
+                    let mut buf = Vec::new();
+                    decoded.write_to_vec(&mut buf);
+                    Ok(Some(OwnedJsonb::new(buf)))
+                } else {
+                    let value = OwnedJsonb::from_item(schema_item.item)?;
+                    Ok(Some(value))
+                }
+            } else {
+                let value = OwnedJsonb::from_item(schema_item.item)?;
+                Ok(Some(value))
+            }
         } else {
             Ok(None)
         }
@@ -406,15 +534,26 @@ impl<'a> Selector<'a> {
             return Ok(None);
         }
         self.execute(json_path)?;
-        if let Some(JsonbItem::Boolean(v)) = self.items.pop_front() {
-            return Ok(Some(v));
+        if let Some(schema_item) = self.items.pop_front() {
+            match schema_item.item {
+                JsonbItem::Boolean(v) => return Ok(Some(v)),
+                JsonbItem::Raw(raw) if schema_item.schema.is_some() => {
+                    let val = crate::schema::decode(raw.data, schema_item.schema.unwrap());
+                    if let Value::Bool(b) = val {
+                        return Ok(Some(b));
+                    }
+                }
+                _ => {}
+            }
         }
         Ok(None)
     }
 
     fn execute(&mut self, json_path: &'a JsonPath<'a>) -> Result<()> {
-        // add root jsonb
-        let root_item = JsonbItem::Raw(self.root_jsonb);
+        let root_item = SchemaItem {
+            item: JsonbItem::Raw(self.root_jsonb),
+            schema: self.root_schema,
+        };
         self.items.clear();
         self.items.push_front(root_item);
 
@@ -472,7 +611,11 @@ impl<'a> Selector<'a> {
                     self.select_object_values(item)?;
                 }
                 Path::RecursiveDotWildcard(index_opt) => {
-                    self.recursive_select_values(item, 0, index_opt)?;
+                    if item.schema.is_some() {
+                        // Recursive schema not implemented
+                    } else {
+                        self.recursive_select_values(item.item, 0, index_opt)?;
+                    }
                 }
                 Path::BracketWildcard => {
                     self.select_array_values(item)?;
@@ -489,19 +632,45 @@ impl<'a> Selector<'a> {
         Ok(true)
     }
 
-    fn select_object_values(&mut self, parent_item: JsonbItem<'a>) -> Result<()> {
-        let jsonb_item_type = parent_item.jsonb_item_type()?;
+    fn select_object_values(&mut self, parent_item: SchemaItem<'a>) -> Result<()> {
+        if let Some(schema) = parent_item.schema {
+            if let JsonbItem::Raw(raw) = parent_item.item {
+                let mut cursor = Cursor::new(raw.data);
+                let mut children = Vec::new();
+                Self::traverse_schema_object(
+                    &mut cursor,
+                    schema,
+                    |_key, val_slice, val_schema| {
+                        let child = SchemaItem {
+                            item: JsonbItem::Raw(RawJsonb::new(val_slice)),
+                            schema: val_schema,
+                        };
+                        children.push(child);
+                        Ok(())
+                    },
+                )?;
+                for child in children {
+                    self.items.push_back(child);
+                }
+                return Ok(());
+            }
+        }
+
+        let jsonb_item_type = parent_item.item.jsonb_item_type()?;
         if !matches!(jsonb_item_type, JsonbItemType::Object(_)) {
             return Ok(());
         };
 
-        match parent_item {
+        match parent_item.item {
             JsonbItem::Raw(raw) => {
                 let object_val_iter_opt = ObjectValueIterator::new(raw)?;
                 if let Some(mut object_val_iter) = object_val_iter_opt {
                     for result in &mut object_val_iter {
                         let val_item = result?;
-                        self.items.push_back(val_item);
+                        self.items.push_back(SchemaItem {
+                            item: val_item,
+                            schema: None,
+                        });
                     }
                 }
             }
@@ -511,7 +680,10 @@ impl<'a> Selector<'a> {
                     for result in &mut object_val_iter {
                         let val_item = result?;
                         let owned_item = OwnedJsonb::from_item(val_item)?;
-                        self.items.push_back(JsonbItem::Owned(owned_item));
+                        self.items.push_back(SchemaItem {
+                            item: JsonbItem::Owned(owned_item),
+                            schema: None,
+                        });
                     }
                 }
             }
@@ -533,7 +705,10 @@ impl<'a> Selector<'a> {
             (true, true)
         };
         if is_match {
-            self.items.push_back(parent_item.clone());
+            self.items.push_back(SchemaItem {
+                item: parent_item.clone(),
+                schema: None,
+            });
         }
         if !should_continue {
             return Ok(());
@@ -593,21 +768,44 @@ impl<'a> Selector<'a> {
 
     fn select_object_values_by_name(
         &mut self,
-        parent_item: JsonbItem<'a>,
+        parent_item: SchemaItem<'a>,
         name: &'a str,
     ) -> Result<()> {
-        let jsonb_item_type = parent_item.jsonb_item_type()?;
+        if let Some(schema) = parent_item.schema {
+            if let JsonbItem::Raw(raw) = parent_item.item {
+                let mut cursor = Cursor::new(raw.data);
+                let mut found = None;
+                Self::traverse_schema_object(&mut cursor, schema, |key, val_slice, val_schema| {
+                    if key == name {
+                        found = Some(SchemaItem {
+                            item: JsonbItem::Raw(RawJsonb::new(val_slice)),
+                            schema: val_schema,
+                        });
+                    }
+                    Ok(())
+                })?;
+                if let Some(child) = found {
+                    self.items.push_back(child);
+                }
+                return Ok(());
+            }
+        }
+
+        let jsonb_item_type = parent_item.item.jsonb_item_type()?;
         if !matches!(jsonb_item_type, JsonbItemType::Object(_)) {
             return Ok(());
         };
 
         let key_name = Cow::Borrowed(name);
-        match parent_item {
+        match parent_item.item {
             JsonbItem::Raw(raw) => {
                 if let Some(val_item) =
                     raw.get_object_value_by_key_name(&key_name, |name, key| key.eq(name))?
                 {
-                    self.items.push_back(val_item);
+                    self.items.push_back(SchemaItem {
+                        item: val_item,
+                        schema: None,
+                    });
                 }
             }
             JsonbItem::Owned(ref owned) => {
@@ -616,7 +814,10 @@ impl<'a> Selector<'a> {
                     raw.get_object_value_by_key_name(&key_name, |name, key| key.eq(name))?
                 {
                     let owned_item = OwnedJsonb::from_item(val_item)?;
-                    self.items.push_back(JsonbItem::Owned(owned_item));
+                    self.items.push_back(SchemaItem {
+                        item: JsonbItem::Owned(owned_item),
+                        schema: None,
+                    });
                 }
             }
             _ => {}
@@ -624,21 +825,39 @@ impl<'a> Selector<'a> {
         Ok(())
     }
 
-    fn select_array_values(&mut self, parent_item: JsonbItem<'a>) -> Result<()> {
-        let jsonb_item_type = parent_item.jsonb_item_type()?;
+    fn select_array_values(&mut self, parent_item: SchemaItem<'a>) -> Result<()> {
+        if let Some(schema) = parent_item.schema {
+            if let JsonbItem::Raw(raw) = parent_item.item {
+                let mut cursor = Cursor::new(raw.data);
+                let mut children = Vec::new();
+                Self::traverse_schema_array(&mut cursor, schema, |_idx, val_slice, val_schema| {
+                    let child = SchemaItem {
+                        item: JsonbItem::Raw(RawJsonb::new(val_slice)),
+                        schema: val_schema,
+                    };
+                    children.push(child);
+                    Ok(())
+                })?;
+                for child in children {
+                    self.items.push_back(child);
+                }
+                return Ok(());
+            }
+        }
+
+        let jsonb_item_type = parent_item.item.jsonb_item_type()?;
         if !matches!(jsonb_item_type, JsonbItemType::Array(_)) {
-            // In lax mode, bracket wildcard allow Scalar and Object value.
             self.items.push_back(parent_item);
             return Ok(());
         };
 
-        match parent_item {
+        match parent_item.item {
             JsonbItem::Raw(raw) => {
                 let array_iter_opt = ArrayIterator::new(raw)?;
                 if let Some(mut array_iter) = array_iter_opt {
                     for item_result in &mut array_iter {
                         let item = item_result?;
-                        self.items.push_back(item);
+                        self.items.push_back(SchemaItem { item, schema: None });
                     }
                 }
             }
@@ -648,7 +867,10 @@ impl<'a> Selector<'a> {
                     for item_result in &mut array_iter {
                         let item = item_result?;
                         let owned_item = OwnedJsonb::from_item(item)?;
-                        self.items.push_back(JsonbItem::Owned(owned_item));
+                        self.items.push_back(SchemaItem {
+                            item: JsonbItem::Owned(owned_item),
+                            schema: None,
+                        });
                     }
                 }
             }
@@ -659,10 +881,45 @@ impl<'a> Selector<'a> {
 
     fn select_array_values_by_indices(
         &mut self,
-        parent_item: JsonbItem<'a>,
+        parent_item: SchemaItem<'a>,
         array_indices: &Vec<ArrayIndex>,
     ) -> Result<()> {
-        let jsonb_item_type = parent_item.jsonb_item_type()?;
+        if let Some(schema) = parent_item.schema {
+            if let JsonbItem::Raw(raw) = parent_item.item {
+                let (len, mut cursor) = Self::peek_schema_array_length(raw.data, schema)?;
+
+                let mut indices_to_select = std::collections::HashSet::new();
+                for array_index in array_indices {
+                    indices_to_select.extend(array_index.to_indices(len));
+                }
+                if indices_to_select.is_empty() {
+                    return Ok(());
+                }
+
+                let mut children = Vec::new();
+                Self::traverse_schema_array_content(
+                    &mut cursor,
+                    len,
+                    schema,
+                    |idx, val_slice, val_schema| {
+                        if indices_to_select.contains(&idx) {
+                            let child = SchemaItem {
+                                item: JsonbItem::Raw(RawJsonb::new(val_slice)),
+                                schema: val_schema,
+                            };
+                            children.push(child);
+                        }
+                        Ok(())
+                    },
+                )?;
+                for child in children {
+                    self.items.push_back(child);
+                }
+                return Ok(());
+            }
+        }
+
+        let jsonb_item_type = parent_item.item.jsonb_item_type()?;
         let JsonbItemType::Array(arr_len) = jsonb_item_type else {
             return Ok(());
         };
@@ -671,14 +928,14 @@ impl<'a> Selector<'a> {
             if indices.is_empty() {
                 continue;
             }
-            match parent_item {
+            match parent_item.item {
                 JsonbItem::Raw(raw) => {
                     let array_iter_opt = ArrayIterator::new(raw)?;
                     if let Some(array_iter) = array_iter_opt {
                         for (i, item_result) in &mut array_iter.enumerate() {
                             let item = item_result?;
                             if indices.contains(&i) {
-                                self.items.push_back(item);
+                                self.items.push_back(SchemaItem { item, schema: None });
                             }
                         }
                     }
@@ -690,7 +947,10 @@ impl<'a> Selector<'a> {
                             let item = item_result?;
                             if indices.contains(&i) {
                                 let owned_item = OwnedJsonb::from_item(item)?;
-                                self.items.push_back(JsonbItem::Owned(owned_item));
+                                self.items.push_back(SchemaItem {
+                                    item: JsonbItem::Owned(owned_item),
+                                    schema: None,
+                                });
                             }
                         }
                     }
@@ -701,7 +961,7 @@ impl<'a> Selector<'a> {
         Ok(())
     }
 
-    fn eval_expr(&mut self, item: JsonbItem<'a>, expr: &'a Expr<'a>) -> Result<()> {
+    fn eval_expr(&mut self, item: SchemaItem<'a>, expr: &'a Expr<'a>) -> Result<()> {
         match expr {
             Expr::UnaryOp { op, operand } => {
                 let res_items = self.eval_unary_arithmetic_func(item.clone(), op, operand)?;
@@ -728,7 +988,10 @@ impl<'a> Selector<'a> {
                     } else {
                         JsonbItem::Null
                     };
-                    self.items.push_back(res_item);
+                    self.items.push_back(SchemaItem {
+                        item: res_item,
+                        schema: None,
+                    });
                 }
             },
             Expr::ExistsFunc(_) => {
@@ -738,11 +1001,17 @@ impl<'a> Selector<'a> {
                 } else {
                     JsonbItem::Null
                 };
-                self.items.push_back(res_item);
+                self.items.push_back(SchemaItem {
+                    item: res_item,
+                    schema: None,
+                });
             }
             Expr::Value(val) => {
                 let res_item = self.eval_value(val)?;
-                self.items.push_back(res_item);
+                self.items.push_back(SchemaItem {
+                    item: res_item,
+                    schema: None,
+                });
             }
             Expr::Paths(_) => {
                 return Err(Error::InvalidJsonPath);
@@ -753,10 +1022,10 @@ impl<'a> Selector<'a> {
 
     fn eval_unary_arithmetic_func(
         &mut self,
-        item: JsonbItem<'a>,
+        item: SchemaItem<'a>,
         op: &UnaryOperator,
         operand: &'a Expr<'a>,
-    ) -> Result<Vec<JsonbItem<'a>>> {
+    ) -> Result<Vec<SchemaItem<'a>>> {
         let operand = self.convert_expr_val(item, operand)?;
         let Ok(nums) = operand.convert_to_numbers() else {
             return Err(Error::InvalidJsonPath);
@@ -766,14 +1035,20 @@ impl<'a> Selector<'a> {
             UnaryOperator::Add => {
                 for num in nums {
                     let owned_num = to_owned_jsonb(&num)?;
-                    num_vals.push(JsonbItem::Owned(owned_num));
+                    num_vals.push(SchemaItem {
+                        item: JsonbItem::Owned(owned_num),
+                        schema: None,
+                    });
                 }
             }
             UnaryOperator::Subtract => {
                 for num in nums {
                     let neg_num = num.neg()?;
                     let owned_num = to_owned_jsonb(&neg_num)?;
-                    num_vals.push(JsonbItem::Owned(owned_num));
+                    num_vals.push(SchemaItem {
+                        item: JsonbItem::Owned(owned_num),
+                        schema: None,
+                    });
                 }
             }
         };
@@ -782,11 +1057,11 @@ impl<'a> Selector<'a> {
 
     fn eval_binary_arithmetic_func(
         &mut self,
-        item: JsonbItem<'a>,
+        item: SchemaItem<'a>,
         op: &BinaryOperator,
         left: &'a Expr<'a>,
         right: &'a Expr<'a>,
-    ) -> Result<Vec<JsonbItem<'a>>> {
+    ) -> Result<Vec<SchemaItem<'a>>> {
         let lhs = self.convert_expr_val(item.clone(), left)?;
         let rhs = self.convert_expr_val(item.clone(), right)?;
         let Ok(lnum) = lhs.convert_to_number() else {
@@ -805,7 +1080,10 @@ impl<'a> Selector<'a> {
             _ => return Ok(vec![]),
         };
         let owned_num = to_owned_jsonb(&num_val)?;
-        Ok(vec![JsonbItem::Owned(owned_num)])
+        Ok(vec![SchemaItem {
+            item: JsonbItem::Owned(owned_num),
+            schema: None,
+        }])
     }
 
     fn eval_value(&mut self, val: &PathValue<'a>) -> Result<JsonbItem<'a>> {
@@ -823,7 +1101,7 @@ impl<'a> Selector<'a> {
 
     fn eval_filter_expr(
         &mut self,
-        item: JsonbItem<'a>,
+        item: SchemaItem<'a>,
         expr: &'a Expr<'a>,
     ) -> Result<Option<bool>> {
         match expr {
@@ -866,7 +1144,7 @@ impl<'a> Selector<'a> {
         }
     }
 
-    fn eval_exists(&mut self, item: JsonbItem<'a>, paths: &'a [Path<'a>]) -> Result<bool> {
+    fn eval_exists(&mut self, item: SchemaItem<'a>, paths: &'a [Path<'a>]) -> Result<bool> {
         let filter_items = self.select_by_filter_paths(item, paths)?;
         let res = !filter_items.is_empty();
         Ok(res)
@@ -874,14 +1152,17 @@ impl<'a> Selector<'a> {
 
     fn select_by_filter_paths(
         &mut self,
-        item: JsonbItem<'a>,
+        item: SchemaItem<'a>,
         paths: &'a [Path<'a>],
-    ) -> Result<VecDeque<JsonbItem<'a>>> {
+    ) -> Result<VecDeque<SchemaItem<'a>>> {
         let mut items = VecDeque::new();
         if let Some(Path::Current) = paths.first() {
             items.push_front(item.clone());
         } else {
-            let root_item = JsonbItem::Raw(self.root_jsonb);
+            let root_item = SchemaItem {
+                item: JsonbItem::Raw(self.root_jsonb),
+                schema: self.root_schema,
+            };
             items.push_front(root_item);
         }
         std::mem::swap(&mut self.items, &mut items);
@@ -912,7 +1193,7 @@ impl<'a> Selector<'a> {
 
     fn convert_expr_val(
         &mut self,
-        item: JsonbItem<'a>,
+        item: SchemaItem<'a>,
         expr: &'a Expr<'a>,
     ) -> Result<ExprValue<'a>> {
         match expr {
@@ -921,8 +1202,16 @@ impl<'a> Selector<'a> {
                 let mut filter_items = self.select_by_filter_paths(item, paths)?;
 
                 let mut values = Vec::with_capacity(filter_items.len());
-                while let Some(item) = filter_items.pop_front() {
-                    let value = match item {
+                while let Some(schema_item) = filter_items.pop_front() {
+                    // Check if schema encoded
+                    if let Some(schema) = schema_item.schema {
+                        if let JsonbItem::Raw(raw) = schema_item.item {
+                            values.push(EvaluationValue::SchemaEncoded(raw, schema));
+                            continue;
+                        }
+                    }
+
+                    let value = match schema_item.item {
                         JsonbItem::Null => PathValue::Null,
                         JsonbItem::Boolean(v) => PathValue::Boolean(v),
                         JsonbItem::Number(num) => {
@@ -931,7 +1220,7 @@ impl<'a> Selector<'a> {
                         }
                         JsonbItem::String(s) => PathValue::String(s),
                         JsonbItem::Raw(raw) => {
-                            // collect values in the array.
+                            // Standard Raw: collect values in the array.
                             let array_iter_opt = ArrayIterator::new(raw)?;
                             if let Some(mut array_iter) = array_iter_opt {
                                 for item_result in &mut array_iter {
@@ -945,11 +1234,9 @@ impl<'a> Selector<'a> {
                                         }
                                         JsonbItem::String(s) => PathValue::String(s),
                                         JsonbItem::Raw(raw) => PathValue::Raw(raw),
-                                        _ => {
-                                            continue;
-                                        }
+                                        _ => continue,
                                     };
-                                    values.push(value);
+                                    values.push(EvaluationValue::Path(value));
                                 }
                             } else {
                                 let jsonb_item = JsonbItem::from_raw_jsonb(raw)?;
@@ -962,11 +1249,9 @@ impl<'a> Selector<'a> {
                                     }
                                     JsonbItem::String(s) => PathValue::String(s),
                                     JsonbItem::Raw(raw) => PathValue::Raw(raw),
-                                    _ => {
-                                        continue;
-                                    }
+                                    _ => continue,
                                 };
-                                values.push(value);
+                                values.push(EvaluationValue::Path(value));
                             }
                             continue;
                         }
@@ -974,7 +1259,7 @@ impl<'a> Selector<'a> {
                             continue;
                         }
                     };
-                    values.push(value);
+                    values.push(EvaluationValue::Path(value));
                 }
                 Ok(ExprValue::Values(values))
             }
@@ -989,21 +1274,22 @@ impl<'a> Selector<'a> {
         rhs: &ExprValue<'a>,
     ) -> Option<bool> {
         let (lvals, rvals) = match (lhs, rhs) {
-            (ExprValue::Value(lhs), ExprValue::Value(rhs)) => {
-                (vec![*lhs.clone()], vec![*rhs.clone()])
-            }
+            (ExprValue::Value(lhs), ExprValue::Value(rhs)) => (
+                vec![EvaluationValue::Path(*lhs.clone())],
+                vec![EvaluationValue::Path(*rhs.clone())],
+            ),
             (ExprValue::Values(lhses), ExprValue::Value(rhs)) => {
-                (lhses.clone(), vec![*rhs.clone()])
+                (lhses.clone(), vec![EvaluationValue::Path(*rhs.clone())])
             }
             (ExprValue::Value(lhs), ExprValue::Values(rhses)) => {
-                (vec![*lhs.clone()], rhses.clone())
+                (vec![EvaluationValue::Path(*lhs.clone())], rhses.clone())
             }
             (ExprValue::Values(lhses), ExprValue::Values(rhses)) => (lhses.clone(), rhses.clone()),
         };
 
         for lval in lvals.iter() {
             for rval in rvals.iter() {
-                if let Some(res) = self.compare_value(op, lval.clone(), rval.clone()) {
+                if let Some(res) = self.compare_evaluation_value(op, lval, rval) {
                     if res {
                         return Some(true);
                     }
@@ -1013,6 +1299,43 @@ impl<'a> Selector<'a> {
             }
         }
         Some(false)
+    }
+
+    fn compare_evaluation_value(
+        &mut self,
+        op: &BinaryOperator,
+        lhs: &EvaluationValue<'a>,
+        rhs: &EvaluationValue<'a>,
+    ) -> Option<bool> {
+        // Optimization check
+        if let (EvaluationValue::SchemaEncoded(raw_lhs, schema), EvaluationValue::Path(val_rhs)) =
+            (lhs, rhs)
+        {
+            if *op == BinaryOperator::Eq {
+                if let Some(mul) = schema.multiple_of {
+                    if let PathValue::Number(n) = val_rhs {
+                        if let Some(i) = n.as_i128() {
+                            if i % mul != 0 {
+                                return Some(false);
+                            }
+                        }
+                    }
+                }
+
+                let val = value_to_value(val_rhs);
+                let mut buf = Vec::new();
+                encode(&val, schema, &mut buf);
+                if raw_lhs.data == buf {
+                    return Some(true);
+                } else {
+                    // Fallback to decode
+                }
+            }
+        }
+
+        let lhs_pv = lhs.clone().as_path_value().ok()?;
+        let rhs_pv = rhs.clone().as_path_value().ok()?;
+        self.compare_value(op, lhs_pv, rhs_pv)
     }
 
     fn compare_value(
@@ -1051,5 +1374,288 @@ impl<'a> Selector<'a> {
         } else {
             None
         }
+    }
+
+    // Schema Traversal Helpers
+
+    fn traverse_schema_object<'b, F>(
+        cursor: &mut Cursor<&'b [u8]>,
+        schema: &'a Schema,
+        mut cb: F,
+    ) -> Result<()>
+    where
+        F: FnMut(&str, &'b [u8], Option<&'a Schema>) -> Result<()>,
+    {
+        let properties = schema.properties.as_ref();
+
+        if let Some(required) = &schema.required {
+            for key in required {
+                let sub_schema = properties.and_then(|p| p.get(key));
+                let start = cursor.position() as usize;
+                Self::skip_value(cursor, sub_schema)?;
+                let end = cursor.position() as usize;
+                let val_slice = &cursor.get_ref()[start..end];
+                cb(key, val_slice, sub_schema)?;
+            }
+        }
+
+        let count = read_uvarint(cursor);
+        for _ in 0..count {
+            let k_len = read_uvarint(cursor) as usize;
+            let k_bytes = read_bytes(cursor, k_len);
+            let k = std::str::from_utf8(k_bytes).unwrap_or("");
+
+            let sub_schema = properties.and_then(|p| p.get(k));
+            let start = cursor.position() as usize;
+            Self::skip_value(cursor, sub_schema)?;
+            let end = cursor.position() as usize;
+            let val_slice = &cursor.get_ref()[start..end];
+
+            cb(k, val_slice, sub_schema)?;
+        }
+        Ok(())
+    }
+
+    fn traverse_schema_array<'b, F>(
+        cursor: &mut Cursor<&'b [u8]>,
+        schema: &'a Schema,
+        cb: F,
+    ) -> Result<()>
+    where
+        F: FnMut(usize, &'b [u8], Option<&'a Schema>) -> Result<()>,
+    {
+        let (len, mut cursor) = Self::peek_schema_array_length(cursor.get_ref(), schema)?;
+        Self::traverse_schema_array_content(&mut cursor, len, schema, cb)
+    }
+
+    fn peek_schema_array_length<'b>(
+        buf: &'b [u8],
+        schema: &Schema,
+    ) -> Result<(usize, Cursor<&'b [u8]>)> {
+        let mut cursor = Cursor::new(buf);
+        let encoded_len = read_uvarint(&mut cursor);
+        let len = if let Some(min) = schema.min_items {
+            encoded_len + min
+        } else {
+            encoded_len
+        };
+        Ok((len as usize, cursor))
+    }
+
+    fn traverse_schema_array_content<'b, F>(
+        cursor: &mut Cursor<&'b [u8]>,
+        len: usize,
+        schema: &'a Schema,
+        mut cb: F,
+    ) -> Result<()>
+    where
+        F: FnMut(usize, &'b [u8], Option<&'a Schema>) -> Result<()>,
+    {
+        for i in 0..len {
+            let mut sub_schema = None;
+            if let Some(prefix_items) = &schema.prefix_items {
+                if i < prefix_items.len() {
+                    sub_schema = Some(&prefix_items[i]);
+                }
+            }
+            if sub_schema.is_none() {
+                if let Some(items) = &schema.items {
+                    sub_schema = Some(items);
+                }
+            }
+
+            let start = cursor.position() as usize;
+            Self::skip_value(cursor, sub_schema)?;
+            let end = cursor.position() as usize;
+            let val_slice = &cursor.get_ref()[start..end];
+
+            cb(i, val_slice, sub_schema)?;
+        }
+        Ok(())
+    }
+
+    fn skip_value(cursor: &mut Cursor<&[u8]>, schema: Option<&Schema>) -> Result<()> {
+        if let Some(schema) = schema {
+            if schema.const_value.is_some() {
+                return Ok(());
+            }
+            if let Some(_enums) = &schema.enum_values {
+                let _idx = read_uvarint(cursor);
+                return Ok(());
+            }
+
+            match &schema.instance_type {
+                Some(SingleOrVec::Single(instance_type)) => {
+                    Self::skip_typed_value(cursor, instance_type, schema)?;
+                    return Ok(());
+                }
+                Some(SingleOrVec::Vec(types)) => {
+                    let pos = cursor.position();
+                    let tag = read_byte(cursor);
+                    if tag == TAG_NUMBER
+                        && (types.contains(&InstanceType::Integer)
+                            || types.contains(&InstanceType::Number))
+                    {
+                        let inner_tag = read_byte(cursor);
+                        if inner_tag == TAG_OPTIMIZED_NUMBER {
+                            let _ = read_uvarint128(cursor);
+                            return Ok(());
+                        }
+                    }
+                    cursor.set_position(pos);
+                }
+                None => {}
+            }
+        }
+        Self::skip_untyped_value(cursor)
+    }
+
+    fn skip_typed_value(
+        cursor: &mut Cursor<&[u8]>,
+        instance_type: &InstanceType,
+        schema: &Schema,
+    ) -> Result<()> {
+        match instance_type {
+            InstanceType::Null => {}
+            InstanceType::Boolean => {
+                let _ = read_byte(cursor);
+            }
+            InstanceType::Number | InstanceType::Integer => {
+                let tag = read_byte(cursor);
+                if tag == TAG_OPTIMIZED_NUMBER {
+                    let _ = read_uvarint128(cursor);
+                } else {
+                    cursor.set_position(cursor.position() - 1);
+                    let len = read_uvarint(cursor) as usize;
+                    let _ = read_bytes(cursor, len);
+                }
+            }
+            InstanceType::String => {
+                if let Some(format) = &schema.format {
+                    if format == "date" {
+                        let tag = read_byte(cursor);
+                        if tag == TAG_DATE_COMPRESSED {
+                            let _ = read_bytes(cursor, 4);
+                            return Ok(());
+                        }
+                    } else if format == "time" {
+                        let tag = read_byte(cursor);
+                        if tag == TAG_TIME_COMPRESSED {
+                            let _ = read_bytes(cursor, 10);
+                            return Ok(());
+                        }
+                    } else if format == "date-time" {
+                        let tag = read_byte(cursor);
+                        if tag == TAG_DATE_TIME_COMPRESSED {
+                            let _ = read_bytes(cursor, 14);
+                            return Ok(());
+                        }
+                    } else if format == "ipv4" {
+                        let tag = read_byte(cursor);
+                        if tag == TAG_IPV4_COMPRESSED {
+                            let _ = read_bytes(cursor, 4);
+                            return Ok(());
+                        }
+                    } else if format == "ipv6" {
+                        let tag = read_byte(cursor);
+                        if tag == TAG_IPV6_COMPRESSED {
+                            let _ = read_bytes(cursor, 16);
+                            return Ok(());
+                        }
+                    } else if format == "uuid" {
+                        let tag = read_byte(cursor);
+                        if tag == TAG_UUID_COMPRESSED {
+                            let _ = read_bytes(cursor, 16);
+                            return Ok(());
+                        }
+                    }
+                } else if schema.pattern_prefix.is_some() || schema.pattern_suffix.is_some() {
+                    let tag = read_byte(cursor);
+                    if tag == TAG_PATTERN_COMPRESSED {
+                        let len = read_uvarint(cursor) as usize;
+                        let _ = read_bytes(cursor, len);
+                        return Ok(());
+                    }
+                }
+
+                let len = read_uvarint(cursor) as usize;
+                let _ = read_bytes(cursor, len);
+            }
+            InstanceType::Object => {
+                let properties = schema.properties.as_ref();
+
+                if let Some(required) = &schema.required {
+                    for key in required {
+                        let sub_schema = properties.and_then(|p| p.get(key));
+                        Self::skip_value(cursor, sub_schema)?;
+                    }
+                }
+                let count = read_uvarint(cursor);
+                for _ in 0..count {
+                    let k_len = read_uvarint(cursor) as usize;
+                    let k_bytes = read_bytes(cursor, k_len);
+                    let k = std::str::from_utf8(k_bytes).unwrap_or("");
+                    let sub_schema = properties.and_then(|p| p.get(k));
+                    Self::skip_value(cursor, sub_schema)?;
+                }
+            }
+            InstanceType::Array => {
+                let (len, _) = Self::peek_schema_array_length(cursor.get_ref(), schema)?;
+                let _ = read_uvarint(cursor);
+
+                for i in 0..len {
+                    let mut sub_schema = None;
+                    if let Some(prefix_items) = &schema.prefix_items {
+                        if i < prefix_items.len() {
+                            sub_schema = Some(&prefix_items[i]);
+                        }
+                    }
+                    if sub_schema.is_none() {
+                        if let Some(items) = &schema.items {
+                            sub_schema = Some(items);
+                        }
+                    }
+                    Self::skip_value(cursor, sub_schema)?;
+                }
+            }
+        }
+        Ok(())
+    }
+
+    fn skip_untyped_value(cursor: &mut Cursor<&[u8]>) -> Result<()> {
+        let tag = read_byte(cursor);
+        match tag {
+            TAG_NULL | TAG_BOOL_FALSE | TAG_BOOL_TRUE => {}
+            TAG_NUMBER | TAG_STRING => {
+                let len = read_uvarint(cursor) as usize;
+                let _ = read_bytes(cursor, len);
+            }
+            TAG_ARRAY => {
+                let len = read_uvarint(cursor);
+                for _ in 0..len {
+                    Self::skip_untyped_value(cursor)?;
+                }
+            }
+            TAG_OBJECT => {
+                let len = read_uvarint(cursor);
+                for _ in 0..len {
+                    let k_len = read_uvarint(cursor) as usize;
+                    let _ = read_bytes(cursor, k_len);
+                    Self::skip_untyped_value(cursor)?;
+                }
+            }
+            _ => {}
+        }
+        Ok(())
+    }
+}
+
+fn value_to_value(pv: &PathValue) -> Value<'static> {
+    match pv {
+        PathValue::Null => Value::Null,
+        PathValue::Boolean(b) => Value::Bool(*b),
+        PathValue::Number(n) => Value::Number(n.clone()),
+        PathValue::String(s) => Value::String(Cow::Owned(s.clone().into_owned())),
+        _ => Value::Null,
     }
 }

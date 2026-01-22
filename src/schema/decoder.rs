@@ -4,22 +4,22 @@ use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet};
 use std::io::Cursor;
 
-const TAG_NULL: u8 = 0x00;
-const TAG_BOOL_FALSE: u8 = 0x01;
-const TAG_BOOL_TRUE: u8 = 0x02;
-const TAG_NUMBER: u8 = 0x03;
-const TAG_STRING: u8 = 0x04;
-const TAG_ARRAY: u8 = 0x05;
-const TAG_OBJECT: u8 = 0x06;
-const TAG_OPTIMIZED_NUMBER: u8 = 0xFF;
-const TAG_DATE_COMPRESSED: u8 = 0x01;
-const TAG_TIME_COMPRESSED: u8 = 0x02;
-const TAG_DATE_TIME_COMPRESSED: u8 = 0x03;
-const TAG_IPV4_COMPRESSED: u8 = 0x04;
-const TAG_IPV6_COMPRESSED: u8 = 0x05;
-const TAG_UUID_COMPRESSED: u8 = 0x06;
-const TAG_PATTERN_COMPRESSED: u8 = 0x07;
-const TAG_STRING_UNCOMPRESSED: u8 = 0x00;
+pub(crate) const TAG_NULL: u8 = 0x00;
+pub(crate) const TAG_BOOL_FALSE: u8 = 0x01;
+pub(crate) const TAG_BOOL_TRUE: u8 = 0x02;
+pub(crate) const TAG_NUMBER: u8 = 0x03;
+pub(crate) const TAG_STRING: u8 = 0x04;
+pub(crate) const TAG_ARRAY: u8 = 0x05;
+pub(crate) const TAG_OBJECT: u8 = 0x06;
+pub(crate) const TAG_OPTIMIZED_NUMBER: u8 = 0xFF;
+pub(crate) const TAG_DATE_COMPRESSED: u8 = 0x01;
+pub(crate) const TAG_TIME_COMPRESSED: u8 = 0x02;
+pub(crate) const TAG_DATE_TIME_COMPRESSED: u8 = 0x03;
+pub(crate) const TAG_IPV4_COMPRESSED: u8 = 0x04;
+pub(crate) const TAG_IPV6_COMPRESSED: u8 = 0x05;
+pub(crate) const TAG_UUID_COMPRESSED: u8 = 0x06;
+pub(crate) const TAG_PATTERN_COMPRESSED: u8 = 0x07;
+pub(crate) const TAG_STRING_UNCOMPRESSED: u8 = 0x00;
 
 pub fn decode(buf: &[u8], schema: &Schema) -> Value<'static> {
     let mut cursor = Cursor::new(buf);
@@ -425,7 +425,7 @@ fn decode_untyped_value(cursor: &mut Cursor<&[u8]>) -> Value<'static> {
     }
 }
 
-fn read_byte(cursor: &mut Cursor<&[u8]>) -> u8 {
+pub(crate) fn read_byte(cursor: &mut Cursor<&[u8]>) -> u8 {
     let pos = cursor.position() as usize;
     let buf = *cursor.get_ref();
     if pos < buf.len() {
@@ -436,7 +436,7 @@ fn read_byte(cursor: &mut Cursor<&[u8]>) -> u8 {
     }
 }
 
-fn read_bytes<'a>(cursor: &mut Cursor<&'a [u8]>, len: usize) -> &'a [u8] {
+pub(crate) fn read_bytes<'a>(cursor: &mut Cursor<&'a [u8]>, len: usize) -> &'a [u8] {
     let pos = cursor.position() as usize;
     let buf = *cursor.get_ref();
     if pos + len <= buf.len() {
@@ -447,7 +447,7 @@ fn read_bytes<'a>(cursor: &mut Cursor<&'a [u8]>, len: usize) -> &'a [u8] {
     }
 }
 
-fn read_uvarint(cursor: &mut Cursor<&[u8]>) -> u64 {
+pub(crate) fn read_uvarint(cursor: &mut Cursor<&[u8]>) -> u64 {
     let mut n: u64 = 0;
     let mut shift = 0;
     loop {
@@ -461,7 +461,7 @@ fn read_uvarint(cursor: &mut Cursor<&[u8]>) -> u64 {
     n
 }
 
-fn read_uvarint128(cursor: &mut Cursor<&[u8]>) -> u128 {
+pub(crate) fn read_uvarint128(cursor: &mut Cursor<&[u8]>) -> u128 {
     let mut n: u128 = 0;
     let mut shift = 0;
     loop {

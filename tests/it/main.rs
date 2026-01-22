@@ -16,6 +16,7 @@ mod decode;
 mod encode;
 mod functions;
 mod jsonpath_parser;
+mod jsonpath_selector_schema;
 mod keypath_parser;
 mod number;
 mod parser;
