@@ -217,24 +217,33 @@ fn encode_typed_value(
             }
         }
         (InstanceType::Array, Value::Array(arr)) => {
-            write_uvarint(buf, arr.len() as u64);
-            for (i, v) in arr.iter().enumerate() {
-                if let Some(prefix_items) = &schema.prefix_items {
-                    if i < prefix_items.len() {
-                        encode_value(v, Some(&prefix_items[i]), buf);
-                        continue;
-                    }
-                }
-                if let Some(items) = &schema.items {
-                    encode_value(v, Some(items), buf);
-                    continue;
-                }
-                encode_untyped_value(v, buf);
-            }
+            encode_array(&schema.prefix_items, &schema.items, arr, buf);
         }
         _ => {
             encode_untyped_value(value, buf);
         }
+    }
+}
+
+fn encode_array(
+    prefix_items: &Option<Vec<Schema>>,
+    items: &Option<Box<Schema>>,
+    arr: &[Value],
+    buf: &mut Vec<u8>,
+) {
+    write_uvarint(buf, arr.len() as u64);
+    for (i, v) in arr.iter().enumerate() {
+        if let Some(prefix_items) = prefix_items {
+            if i < prefix_items.len() {
+                encode_value(v, Some(&prefix_items[i]), buf);
+                continue;
+            }
+        }
+        if let Some(items) = &items {
+            encode_value(v, Some(items), buf);
+            continue;
+        }
+        encode_untyped_value(v, buf);
     }
 }
 
