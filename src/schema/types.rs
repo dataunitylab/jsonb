@@ -19,6 +19,10 @@ pub struct Schema {
     pub min_items: Option<u64>,
     #[serde(rename = "maxItems", skip_serializing_if = "Option::is_none")]
     pub max_items: Option<u64>,
+    #[serde(rename = "minLength", skip_serializing_if = "Option::is_none")]
+    pub min_length: Option<u64>,
+    #[serde(rename = "maxLength", skip_serializing_if = "Option::is_none")]
+    pub max_length: Option<u64>,
     #[serde(rename = "prefixItems", skip_serializing_if = "Option::is_none")]
     pub prefix_items: Option<Vec<Schema>>,
     #[serde(skip_serializing_if = "Option::is_none")]

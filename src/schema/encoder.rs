@@ -181,7 +181,15 @@ fn encode_typed_value(
                 }
             }
 
-            write_uvarint(buf, s.len() as u64);
+            if let Some(min) = schema.min_length {
+                if (s.len() as u64) >= min {
+                    write_uvarint(buf, (s.len() as u64) - min);
+                } else {
+                    write_uvarint(buf, s.len() as u64);
+                }
+            } else {
+                write_uvarint(buf, s.len() as u64);
+            }
             buf.extend_from_slice(s.as_bytes());
         }
         (InstanceType::Object, Value::Object(obj)) => {

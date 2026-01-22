@@ -36,3 +36,4 @@ mod schema_multi;
 mod schema_multiple_of;
 mod schema_pattern;
 mod schema_prefix_items;
+mod schema_string_length;

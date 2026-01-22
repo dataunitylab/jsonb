@@ -86,6 +86,12 @@ pub fn from_serde_json(json: &Value) -> Result<Schema> {
                     "maxItems" => {
                         schema.max_items = Some(parse_u64(v, "maxItems")?);
                     }
+                    "minLength" => {
+                        schema.min_length = Some(parse_u64(v, "minLength")?);
+                    }
+                    "maxLength" => {
+                        schema.max_length = Some(parse_u64(v, "maxLength")?);
+                    }
                     "prefixItems" => {
                         if let Value::Array(items) = v {
                             let mut schemas = Vec::new();

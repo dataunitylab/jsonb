@@ -313,7 +313,12 @@ fn decode_typed_value(
                     return Value::String(Cow::Owned(s));
                 }
             }
-            let len = read_uvarint(cursor) as usize;
+            let encoded_len = read_uvarint(cursor) as usize;
+            let len = if let Some(min) = schema.min_length {
+                encoded_len + (min as usize)
+            } else {
+                encoded_len
+            };
             let s = read_bytes(cursor, len);
             let s_str = String::from_utf8_lossy(s).into_owned();
             Value::String(Cow::Owned(s_str))
