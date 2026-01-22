@@ -171,35 +171,16 @@ fn encode_typed_value(
                     return;
                 }
             } else if schema.pattern_prefix.is_some() || schema.pattern_suffix.is_some() {
-                let mut s_slice: &str = &s;
-                let mut matches = true;
-
-                if let Some(prefix) = &schema.pattern_prefix {
-                    if s_slice.starts_with(prefix) {
-                        s_slice = &s_slice[prefix.len()..];
-                    } else {
-                        matches = false;
-                    }
-                }
-
-                if matches {
-                    if let Some(suffix) = &schema.pattern_suffix {
-                        if s_slice.ends_with(suffix) {
-                            s_slice = &s_slice[..s_slice.len() - suffix.len()];
-                        } else {
-                            matches = false;
-                        }
-                    }
-                }
-
-                if matches {
-                    buf.push(TAG_PATTERN_COMPRESSED);
-                    write_uvarint(buf, s_slice.len() as u64);
-                    buf.extend_from_slice(s_slice.as_bytes());
+                if encode_string_with_prefix_or_suffix(
+                    &schema.pattern_prefix,
+                    &schema.pattern_suffix,
+                    s,
+                    buf,
+                ) {
                     return;
                 }
-                buf.push(TAG_STRING_UNCOMPRESSED);
             }
+
             write_uvarint(buf, s.len() as u64);
             buf.extend_from_slice(s.as_bytes());
         }
@@ -407,6 +388,44 @@ fn encode_string_with_format(format: &str, s: &str, buf: &mut Vec<u8>) -> bool {
         buf.push(TAG_STRING_UNCOMPRESSED);
     }
 
+    false
+}
+
+fn encode_string_with_prefix_or_suffix(
+    maybe_prefix: &Option<String>,
+    maybe_suffix: &Option<String>,
+    s: &str,
+    buf: &mut Vec<u8>,
+) -> bool {
+    let mut s_slice: &str = &s;
+    let mut matches = true;
+
+    if let Some(prefix) = &maybe_prefix {
+        if s_slice.starts_with(prefix) {
+            s_slice = &s_slice[prefix.len()..];
+        } else {
+            matches = false;
+        }
+    }
+
+    if matches {
+        if let Some(suffix) = &maybe_suffix {
+            if s_slice.ends_with(suffix) {
+                s_slice = &s_slice[..s_slice.len() - suffix.len()];
+            } else {
+                matches = false;
+            }
+        }
+    }
+
+    if matches {
+        buf.push(TAG_PATTERN_COMPRESSED);
+        write_uvarint(buf, s_slice.len() as u64);
+        buf.extend_from_slice(s_slice.as_bytes());
+        return true;
+    }
+
+    buf.push(TAG_STRING_UNCOMPRESSED);
     false
 }
 
