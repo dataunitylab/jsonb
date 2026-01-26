@@ -20,7 +20,6 @@ const TAG_UUID_COMPRESSED: u8 = 0x06;
 const TAG_PATTERN_COMPRESSED: u8 = 0x07;
 const TAG_STRING_UNCOMPRESSED: u8 = 0x00;
 
-use crate::from_raw_jsonb;
 use jiff::civil::{Date, Time}; // Ensure jiff is available
 
 pub fn encode(value: &Value, schema: &Schema, buf: &mut Vec<u8>) {
@@ -33,8 +32,7 @@ fn encode_value(value: &Value, schema: Option<&Schema>, buf: &mut Vec<u8>) {
             return;
         }
         if let Some(enums) = &schema.enum_values {
-            let serde_val = to_serde_value(value);
-            if let Some(idx) = enums.iter().position(|v| v == &serde_val) {
+            if let Some(idx) = enums.iter().position(|v| v == value) {
                 write_uvarint(buf, idx as u64);
                 return;
             }
@@ -94,13 +92,6 @@ fn encode_value(value: &Value, schema: Option<&Schema>, buf: &mut Vec<u8>) {
     }
     // Fallback or untyped
     encode_untyped_value(value, buf);
-}
-
-fn to_serde_value(value: &Value) -> serde_json::Value {
-    // Convert jsonb::Value to RawJsonb then to serde_json::Value
-    let vec = value.to_vec();
-    let raw = crate::RawJsonb::new(&vec);
-    from_raw_jsonb(&raw).unwrap()
 }
 
 fn encode_typed_value(

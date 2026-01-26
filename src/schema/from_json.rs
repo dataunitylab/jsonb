@@ -108,13 +108,17 @@ pub fn from_serde_json(json: &Value) -> Result<Schema> {
                     }
                     "enum" => {
                         if let Value::Array(vals) = v {
-                            schema.enum_values = Some(vals.clone());
+                            let mut new_vals = Vec::with_capacity(vals.len());
+                            for val in vals {
+                                new_vals.push(crate::Value::from(val));
+                            }
+                            schema.enum_values = Some(new_vals);
                         } else {
                             return Err(Error::Message("enum must be an array".to_string()));
                         }
                     }
                     "const" => {
-                        schema.const_value = Some(v.clone());
+                        schema.const_value = Some(crate::Value::from(v));
                     }
                     "title" | "description" | "examples" => {
                         // Ignore metadata keywords

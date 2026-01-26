@@ -29,12 +29,12 @@ pub fn decode(buf: &[u8], schema: &Schema) -> Value<'static> {
 fn decode_value(cursor: &mut Cursor<&[u8]>, schema: Option<&Schema>) -> Value<'static> {
     if let Some(schema) = schema {
         if let Some(c) = &schema.const_value {
-            return serde_to_jsonb_value(c);
+            return c.clone();
         }
         if let Some(enums) = &schema.enum_values {
             let idx = read_uvarint(cursor) as usize;
             if idx < enums.len() {
-                return serde_to_jsonb_value(&enums[idx]);
+                return enums[idx].clone();
             }
             // Fallback or error? Assuming valid encoding.
             return Value::Null;
@@ -97,42 +97,6 @@ fn decode_value(cursor: &mut Cursor<&[u8]>, schema: Option<&Schema>) -> Value<'s
         }
     }
     decode_untyped_value(cursor)
-}
-
-fn serde_to_jsonb_value(v: &serde_json::Value) -> Value<'static> {
-    match v {
-        serde_json::Value::Null => Value::Null,
-        serde_json::Value::Bool(b) => Value::Bool(*b),
-        serde_json::Value::Number(n) => {
-            if let Some(i) = n.as_i64() {
-                Value::Number(Number::Int64(i))
-            } else if let Some(u) = n.as_u64() {
-                Value::Number(Number::UInt64(u))
-            } else if let Some(f) = n.as_f64() {
-                Value::Number(Number::Float64(f))
-            } else {
-                // Arbitrary precision fallback via string?
-                // jsonb::Number::decode handles it?
-                // For now, float fallback.
-                Value::Number(Number::Float64(n.as_f64().unwrap_or(0.0)))
-            }
-        }
-        serde_json::Value::String(s) => Value::String(Cow::Owned(s.clone())),
-        serde_json::Value::Array(arr) => {
-            let mut res = Vec::with_capacity(arr.len());
-            for item in arr {
-                res.push(serde_to_jsonb_value(item));
-            }
-            Value::Array(res)
-        }
-        serde_json::Value::Object(obj) => {
-            let mut res = BTreeMap::new();
-            for (k, val) in obj {
-                res.insert(k.clone(), serde_to_jsonb_value(val));
-            }
-            Value::Object(res)
-        }
-    }
 }
 
 fn decode_typed_value(
