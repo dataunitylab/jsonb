@@ -15,7 +15,7 @@
 use std::{fs, io::Read};
 
 use criterion::{criterion_group, criterion_main, Criterion};
-use jsonb_schema_schema::{from_slice, Value};
+use jsonb_schema::{from_slice, Value};
 
 fn read(file: &str) -> Vec<u8> {
     let mut f = fs::File::open(file).unwrap();
