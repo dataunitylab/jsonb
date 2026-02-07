@@ -1,7 +1,8 @@
 use crate::Value;
+use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
-#[derive(Debug, Default, Clone, PartialEq)]
+#[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Schema {
     pub instance_type: Option<SingleOrVec<InstanceType>>,
     pub properties: Option<BTreeMap<String, Schema>>,
@@ -23,7 +24,8 @@ pub struct Schema {
     pub const_value: Option<Value<'static>>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
 pub enum InstanceType {
     Null,
     Boolean,
@@ -34,7 +36,8 @@ pub enum InstanceType {
     Integer,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(untagged)]
 pub enum SingleOrVec<T> {
     Single(T),
     Vec(Vec<T>),

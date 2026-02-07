@@ -17,6 +17,8 @@ use std::fmt::Debug;
 use std::fmt::Display;
 use std::fmt::Formatter;
 
+use serde::{Deserialize, Serialize};
+
 use jiff::civil::date;
 use jiff::fmt::strtime;
 use jiff::tz::Offset;
@@ -35,7 +37,7 @@ const TIMESTAMP_TIMEZONE_FORMAT: &str = "%Y-%m-%d %H:%M:%S%.6f %z";
 /// Standard JSON only supports strings, numbers, booleans, null, arrays, and objects.
 /// This enum provides additional data types commonly needed in database systems and
 /// other applications that require more specialized data representations.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum ExtensionValue<'a> {
     /// Binary data (byte array), allowing efficient storage of binary content
     /// that would otherwise require base64 encoding in standard JSON
@@ -55,7 +57,7 @@ pub enum ExtensionValue<'a> {
 /// The value is stored as days since the Unix epoch (January 1, 1970).
 /// This allows for efficient date arithmetic and comparison operations.
 /// Standard JSON has no native date type and typically uses ISO 8601 strings.
-#[derive(Debug, Clone, PartialEq, Eq, Ord, PartialOrd)]
+#[derive(Debug, Clone, PartialEq, Eq, Ord, PartialOrd, Serialize, Deserialize)]
 pub struct Date {
     /// Days since Unix epoch (January 1, 1970)
     /// Positive values represent dates after the epoch, negative values represent dates before
@@ -67,7 +69,7 @@ pub struct Date {
 /// The value is stored as microseconds since the Unix epoch (January 1, 1970 00:00:00 UTC).
 /// This provides microsecond precision for timestamp operations.
 /// Standard JSON has no native timestamp type and typically uses ISO 8601 strings.
-#[derive(Debug, Clone, PartialEq, Eq, Ord, PartialOrd)]
+#[derive(Debug, Clone, PartialEq, Eq, Ord, PartialOrd, Serialize, Deserialize)]
 pub struct Timestamp {
     /// Microseconds since Unix epoch (January 1, 1970 00:00:00 UTC)
     pub value: i64,
@@ -79,7 +81,7 @@ pub struct Timestamp {
 /// timezone-aware datetime operations. The timestamp is stored in UTC,
 /// and the offset indicates the local timezone.
 /// Standard JSON has no native timezone-aware timestamp type.
-#[derive(Debug, Clone, PartialEq, Eq, Ord, PartialOrd)]
+#[derive(Debug, Clone, PartialEq, Eq, Ord, PartialOrd, Serialize, Deserialize)]
 pub struct TimestampTz {
     /// Timezone offset in seconds from UTC
     pub offset: i32,
@@ -93,7 +95,7 @@ pub struct TimestampTz {
 /// components for months, days, and microseconds, allowing for precise
 /// duration calculations that account for calendar irregularities.
 /// Standard JSON has no native interval/duration type.
-#[derive(Debug, Clone, PartialEq, Eq, Ord, PartialOrd)]
+#[derive(Debug, Clone, PartialEq, Eq, Ord, PartialOrd, Serialize, Deserialize)]
 pub struct Interval {
     /// Number of months in the interval
     pub months: i32,

@@ -21,6 +21,8 @@ use std::fmt::Display;
 use std::fmt::Formatter;
 use std::mem::discriminant;
 
+use serde::{Deserialize, Serialize};
+
 use crate::ExtensionValue;
 use rand::distr::Alphanumeric;
 use rand::distr::SampleString;
@@ -46,7 +48,8 @@ pub type Object<'a> = BTreeMap<String, Value<'a>>;
 /// The extended types provide additional functionality beyond the JSON specification,
 /// making this implementation more suitable for database applications and other
 /// systems requiring richer data type support.
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Serialize)]
+#[serde(untagged)]
 pub enum Value<'a> {
     /// Represents a JSON null value
     #[default]
@@ -76,6 +79,16 @@ pub enum Value<'a> {
     Array(Vec<Value<'a>>),
     /// Represents a JSON object as key-value pairs
     Object(Object<'a>),
+}
+
+impl<'de, 'a> Deserialize<'de> for Value<'a> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let v = serde_json::Value::deserialize(deserializer)?;
+        Ok(v.into())
+    }
 }
 
 impl Eq for Value<'_> {}
